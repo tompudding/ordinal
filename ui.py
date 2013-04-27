@@ -69,6 +69,11 @@ class UIElement(object):
     def Passable(self):
         return False
 
+    def SetOpacity(self,value):
+        self.SetColour(self.colour[:3] + (value,))
+        for child_element in self.children:
+            child_element.SetOpacity(value)
+
     def SetBounds(self,pos,tr):
         self.absolute.bottom_left = self.GetAbsoluteInParent(pos)
         self.absolute.top_right   = self.GetAbsoluteInParent(tr)
@@ -541,6 +546,7 @@ class DraggableBox(HoverableBox):
 class TitleBar(HoverableBox):
     def __init__(self,parent,bl,tr,title,colour,buffer):
         self.dragging = None
+        self.last_opacity = 1
         super(TitleBar,self).__init__(parent,bl,tr,colour,buffer)
         self.title = TextBox(parent = self,
                              bl     = Point(0,0),
@@ -563,11 +569,20 @@ class TitleBar(HoverableBox):
         self.parent.UpdatePosition()
         if self.parent.parent.CollidesAny(self.parent,include_parent = False):
             self.parent.bottom_left,self.parent.top_right = self.start_position
+            self.parent.SetOpacity(1)
             self.parent.UpdatePosition()
         self.dragging = None
 
     def MouseMotion(self,pos,rel,handled):
         if self.dragging:
+            if self.parent.parent.CollidesAny(self.parent,include_parent = False):
+                if self.last_opacity != 0:
+                    self.parent.SetOpacity(0.6)
+                    self.last_opacity = 0
+            else:
+                if self.last_opacity != 1:
+                    self.parent.SetOpacity(1)
+                    self.last_opacity = 1
             self.parent.SetPosAbsolute(self.parent.absolute.bottom_left + (pos - self.dragging))
             self.dragging = pos
     
