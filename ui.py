@@ -537,9 +537,9 @@ class CodePrimitive(UIElement):
     def __init__(self,parent,pos,tr,colour):
         self.colour = colour
         super(CodePrimitive,self).__init__(parent,pos,tr)
-        self.title_bar = TitleBar(self,Point(0,0.9),Point(1,1),"Source",colour = self.colour,buffer=globals.colour_tiles)
+        self.title_bar = TitleBar(self,Point(0,0.9),Point(1,1),self.title,colour = self.colour,buffer=globals.colour_tiles)
         self.content = Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.black,buffer = globals.colour_tiles)
-        self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2]
+        self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
 
         self.UpdatePosition()
         self.SetColour(self.colour)
@@ -551,9 +551,10 @@ class CodePrimitive(UIElement):
         top_left     = self.absolute.bottom_left + Point(-self.line_peturb,self.absolute.size.y + self.line_peturb)
         bottom_right = self.absolute.bottom_left + Point(self.absolute.size.x + self.line_peturb,-self.line_peturb)
         
-        self.border[0].SetVertices(bottom_left,top_left,self.level + 0.5 + 100)
+        self.border[0].SetVertices(bottom_left,top_left,self.level + 0.5)
         self.border[1].SetVertices(bottom_left,bottom_right,self.level + 0.5)
         self.border[2].SetVertices(bottom_right,top_right,self.level + 0.5)
+        self.border[3].SetVertices(top_left,top_right,self.level + 0.5)
 
 
     def Delete(self):
@@ -578,6 +579,9 @@ class CodePrimitive(UIElement):
         self.colour = colour
         for line in self.border:
             line.SetColour(self.colour)
+
+class Source(CodePrimitive):
+    title = "Source"
     
 
 class TextBox(UIElement):

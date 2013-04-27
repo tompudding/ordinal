@@ -117,7 +117,7 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = ui.CodePrimitive(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white)
+        self.box = ui.Source(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white)
         self.box.Enable()
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
@@ -185,7 +185,7 @@ class GameView(ui.RootElement):
         
         if handled:
             return handled,dragging
-        if button == 3:
+        if button == 1:
             self.zooming = None
             self.dragging = screen_pos
             return True,self
@@ -202,7 +202,7 @@ class GameView(ui.RootElement):
         if handled:
             return handled,dragging
 
-        if button == 3:
+        if button == 1:
             self.dragging = None
             return True,False
         if button == 2:
