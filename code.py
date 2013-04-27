@@ -16,7 +16,9 @@ class Connector(ui.HoverableElement):
         self.circle_lines = [drawing.Line(globals.line_buffer) for i in xrange(self.circle_segments)]
         self.border = [drawing.Line(globals.line_buffer) for i in xrange(4)]
         self.arrow  = [drawing.Line(globals.line_buffer) for i in xrange(3)]
+        self.connector_line = drawing.Line(globals.line_buffer)
         self.points = []
+        self.connecting = False
         for i in xrange(self.circle_segments):
             angle = (float(i)/self.circle_segments)*twopi
             self.points.append(Point( math.cos(angle)*0.25 + 0.5,math.sin(angle)*0.25 + 0.5))
@@ -63,25 +65,82 @@ class InputButton(Connector):
     arrow_offset = Point(0,0)
 
 class OutputButton(Connector):
-    arrow_offset = Point(0.5,0)
+    arrow_offset = Point(0.45,0)
+    def OnClick(self,pos,button):
+        if button == 1:
+            self.connecting = True
+            self.connector_line.SetVertices(Point(0,0),Point(0,0),0)
+            self.connector_line.Enable()
+            self.root.active_connector = self
+
+    def Update(self,t):
+        if self.connecting:
+            self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),self.root.mouse_pos,drawing.constants.DrawLevels.ui)
+            self.connector_line.SetColour(drawing.constants.colours.red)
+
+    #def Undepress(self):
+    #    self.connecting = False
+    #    self.connector_line.Disable()
+
+    def MouseButtonDown(self,pos,button):
+        pass
+
+    def MouseButtonUp(self,pos,button):
+        if self.connecting:
+            if button == 3:
+                self.connecting = False
+                self.connector_line.Disable()
+                self.root.active_connector = None
+            if button == 1:
+                #did they click on something
+                hover = self.root.hovered
+                if isinstance(hover,InputButton):
+                    self.parent.next = hover.parent
+                    self.parent.next.prev = self.parent
+                    self.connecting = False
+                    self.parent.UpdateConnectedLineForward()
+                    self.root.active_connector = None
+                else:
+                    self.connecting = False
+                    self.connector_line.Disable()
+                    self.root.active_connector = None
+
+    def MouseMotion(self,pos,rel,handled):
+        if self.connecting:
+            self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),pos,drawing.constants.DrawLevels.ui)
+            self.connector_line.SetColour(drawing.constants.colours.red)
+          
 
 class CodePrimitive(ui.UIElement):
     line_peturb = 0.5
     def __init__(self,parent,pos,tr,colour):
         self.colour = colour
+        self.next = None
+        self.prev = None
         super(CodePrimitive,self).__init__(parent,pos,tr)
         self.title_bar = ui.TitleBar(self,Point(0,0.9),Point(1,1),self.title,colour = self.colour,buffer=globals.colour_tiles)
         self.content = ui.Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.dark_grey,buffer = globals.colour_tiles)
         self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
         self.connectors = []
         if self.input:
-            self.connectors.append( InputButton(self,Point(0,0.4),Point(0.2,0.6)) )
+            self.input = InputButton(self,Point(0,0.4),Point(0.2,0.6)) 
+            self.connectors.append( self.input )
         if self.output:
-            self.connectors.append( OutputButton(self,Point(0.8,0.4),Point(1.0,0.6)) )
+            self.output = OutputButton(self,Point(0.8,0.4),Point(1.0,0.6)) 
+            self.connectors.append( self.output )
 
         self.UpdatePosition()
         self.SetColour(self.colour)
         self.symbol = self.Symbol(self.content,Point(0,0),Point(1,1))
+
+    def UpdateConnectedLineForward(self):
+        if self.next:
+            #we own the line pointing to the next guy
+            self.output.connector_line.SetVertices(self.output.GetAbsolute(Point(0.5,0.5)),self.next.input.GetAbsolute(Point(0.5,0.5)),drawing.constants.DrawLevels.ui)
+            
+    def UpdateConnectedLineBackwards(self):
+        if self.prev:
+            self.prev.UpdateConnectedLineForward()
 
     def UpdatePosition(self):
         super(CodePrimitive,self).UpdatePosition()
@@ -95,6 +154,8 @@ class CodePrimitive(ui.UIElement):
         self.border[2].SetVertices(bottom_right,top_right,self.level + 0.5)
         self.border[3].SetVertices(top_left,top_right,self.level + 0.5)
 
+        self.UpdateConnectedLineForward()
+        self.UpdateConnectedLineBackwards()
 
     def Delete(self):
         super(CodePrimitive,self).Delete()

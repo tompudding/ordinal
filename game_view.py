@@ -118,8 +118,8 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = code.Source(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white)
-        self.inc = code.Increment(self,Point(0.7,0.7),Point(0.8,0.8),drawing.constants.colours.white)
+        self.box = code.Source(self,Point(0.1,0.1),Point(0.2,0.2),drawing.constants.colours.white)
+        self.inc = code.Increment(self,Point(0.3,0.14),Point(0.4,0.24),drawing.constants.colours.white)
         self.box.Enable()
         self.inc.Enable()
         #skip titles for development of the main game
@@ -129,6 +129,7 @@ class GameView(ui.RootElement):
         self.dragging = None
         self.zoom = 1
         self.zooming = None
+        self.active_connector = False
         self.StartMusic()
 
     def StartMusic(self):
@@ -184,6 +185,9 @@ class GameView(ui.RootElement):
 
     def MouseButtonDown(self,pos,button):
         screen_pos = self.viewpos.Get() + (pos/self.zoom)
+        if self.active_connector:
+            self.active_connector.MouseButtonDown(screen_pos,button)
+            return False,None
         handled,dragging = super(GameView,self).MouseButtonDown(screen_pos,button)
         
         if handled:
@@ -201,6 +205,9 @@ class GameView(ui.RootElement):
 
     def MouseButtonUp(self,pos,button):
         screen_pos = self.viewpos.Get() + (pos/self.zoom)
+        if self.active_connector:
+            self.active_connector.MouseButtonUp(screen_pos,button)
+            return False,None
         handled,dragging = super(GameView,self).MouseButtonUp(screen_pos,button)
         if handled:
             return handled,dragging
@@ -222,7 +229,9 @@ class GameView(ui.RootElement):
     def MouseMotion(self,pos,rel,handled):
         screen_pos = self.viewpos.Get() + (pos/self.zoom)
         screen_rel = rel/self.zoom
-        self.mouse_pos = pos
+        self.mouse_pos = screen_pos
+        if self.active_connector:
+            self.active_connector.MouseMotion(screen_pos,screen_rel,handled)
         handled = super(GameView,self).MouseMotion(screen_pos,screen_rel,handled)
         if handled:
             return handled

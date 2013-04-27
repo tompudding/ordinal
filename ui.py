@@ -231,6 +231,7 @@ class RootElement(UIElement):
         self.hovered             = None
         self.children            = []
         self.active_children     = UIElementList()
+        self.updateable_children = {}
         self.depressed           = None
         self.SetBounds(bl,tr)
         
@@ -248,6 +249,16 @@ class RootElement(UIElement):
         for child in toremove:
             child.Delete()
         self.active_children = UIElementList()
+
+    def RegisterUpdateable(self,item):
+        self.updateable_children[item] = True
+
+    def RemoveUpdatable(self,item):
+        try:
+            del self.updateable_children[item]
+        except KeyError:
+            pass
+
 
     def MouseMotion(self,pos,rel,handled):
         """
@@ -310,7 +321,17 @@ class RootElement(UIElement):
         return False,False
 
     def Update(self,t):
-        pass
+        #Would it be faster to make a list of items to remove and then remove them, rather than build a new list?
+        to_remove = []
+        for item in self.updateable_children:
+            if item.enabled:
+                complete = item.Update(t)
+                if complete:
+                    to_remove.append(item)
+        if len(to_remove) > 0:
+            for item in to_remove:
+                self.RemoveUpdatable(item)
+
     
     def Draw(self):
         pass
@@ -343,18 +364,6 @@ class UIRoot(RootElement):
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
         for item in self.drawable_children:
             item.Draw()
-
-    def Update(self,t):
-        #Would it be faster to make a list of items to remove and then remove them, rather than build a new list?
-        to_remove = []
-        for item in self.updateable_children:
-            if item.enabled:
-                complete = item.Update(t)
-                if complete:
-                    to_remove.append(item)
-        if len(to_remove) > 0:
-            for item in to_remove:
-                self.RemoveUpdatable(item)
 
     def RegisterDrawable(self,item):
         self.drawable_children[item] = True
