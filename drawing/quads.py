@@ -153,7 +153,7 @@ class Shape(object):
     def SetVertices(self,bl,tr,z):
         if self.deleted:
             return
-        setvertices(self.vertex,bl,tr,z)
+        self.setvertices(self.vertex,bl,tr,z)
         if self.old_vertices != None:
             self.old_vertices = numpy.copy(self.vertex[0:self.num_points])
             for i in xrange(self.num_points):
@@ -162,7 +162,7 @@ class Shape(object):
     def SetColour(self,colour):
         if self.deleted:
             return
-        setcolour(self.colour,colour)
+        self.setcolour(self.colour,colour)
 
     def SetColours(self,colours):
         if self.deleted:
@@ -174,27 +174,46 @@ class Shape(object):
     def SetTextureCoordinates(self,tc):
         self.tc[0:self.num_points] = tc
 
-class Quad(Shape):
-    num_points = 4
-
-class Line(Shape):
-    num_points = 2
-
-def setvertices(vertex,bl,tr,z):
+def setverticesquad(self,vertex,bl,tr,z):
     vertex[0] = (bl.x,bl.y,z)
     vertex[1] = (bl.x,tr.y,z)
     vertex[2] = (tr.x,tr.y,z)
     vertex[3] = (tr.x,bl.y,z)
 
-def setcolour(colour,value):
+def setverticesline(self,vertex,start,end,z):
+    vertex[0] = (start.x,start.y,z)
+    vertex[1] = (end.x,end.y,z)
+
+def setcolourquad(self,colour,value):
     for i in xrange(4):
         for j in xrange(4):
             colour[i][j] = value[j]
 
-def setcolours(colour,values):
+def setcoloursquad(self,colour,values):
     for i in xrange(4):
         for j in xrange(4):
             colour[i][j] = values[i][j]
+
+def setcolourline(self,colour,value):
+    for i in xrange(2):
+        for j in xrange(4):
+            colour[i][j] = value[j]
+
+def setcoloursline(self,colour,values):
+    for i in xrange(2):
+        for j in xrange(4):
+            colour[i][j] = values[i][j]
+
+class Quad(Shape):
+    num_points = 4
+    setvertices = setverticesquad
+    setcolour   = setcolourquad
+
+class Line(Shape):
+    num_points = 2
+    setvertices = setverticesline
+    setcolour   = setcolourline
+
 
 class QuadBorder(object):
     """Class that draws the outline of a rectangle"""

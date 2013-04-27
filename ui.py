@@ -406,6 +406,56 @@ class Box(UIElement):
         super(Box,self).MakeUnselectable()
         self.quad.SetColour(self.unselectable_colour)
 
+class Grid(UIElement):
+    def __init__(self,parent,pos,tr,spacing,colour = drawing.constants.colours.white):
+        super(Grid,self).__init__(parent,pos,tr)
+        self.lines = []
+        start = self.GetAbsolute(pos)
+        end   = self.GetAbsolute(tr)
+        skip  = self.absolute.size*spacing
+        while start.y < end.y:
+            #Add horizontal lines
+            new_line = drawing.Line(globals.line_buffer)
+            line_end = Point(end.x,start.y)
+            new_line.SetVertices(start,line_end,drawing.constants.DrawLevels.grid)
+            self.lines.append(new_line)
+            print 'a',start,line_end,len(self.lines)
+            start.y += skip.y
+        start = self.GetAbsolute(pos)
+        while start.x < end.x:
+            #Add vertical lines
+            new_line = drawing.Line(globals.line_buffer)
+            line_end = Point(start.x,end.y)
+            new_line.SetVertices(start,line_end,drawing.constants.DrawLevels.grid)
+            self.lines.append(new_line)
+            print 'b',start,line_end,len(self.lines)
+            start.x += skip.x
+        self.SetColour(colour)
+        self.Disable()
+        
+    def Delete(self):
+        super(Grid,self).Delete()
+        for line in self.lines:
+            line.Delete()
+        
+    def Disable(self):
+        if self.enabled:
+            for line in self.liens:
+                lines.Disable()
+        super(Grid,self).Disable()
+
+    def Enable(self):
+        if not self.enabled:
+            for line in self.lines:
+                line.Enable()
+        super(Grid,self).Enable()
+
+    def SetColour(self,colour):
+        self.colour = colour
+        for line in self.lines:
+            line.SetColour(self.colour)
+
+
 class HoverableBox(Box,HoverableElement):
     pass
 

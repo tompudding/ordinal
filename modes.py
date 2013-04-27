@@ -70,6 +70,7 @@ class Titles(Mode):
 class GameMode(Mode):
     def __init__(self,parent):
         self.parent = parent
+        self.parent.EnableGrid()
         
 
 class GameOver(Mode):

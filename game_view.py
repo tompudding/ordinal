@@ -12,10 +12,12 @@ class GameView(ui.RootElement):
         self.game_over = False
         #pygame.mixer.music.load('music.ogg')
         #self.music_playing = False
-        super(GameView,self).__init__(Point(0,0),globals.screen)
+        super(GameView,self).__init__(Point(0,0),Point(2000,2000))
+        self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.01,0.01))
+        self.grid.Disable()
         #skip titles for development of the main game
-        self.mode = modes.Titles(self)
-        #self.mode = modes.LevelOne(self)
+        #self.mode = modes.Titles(self)
+        self.mode = modes.GameMode(self)
         self.StartMusic()
 
     def StartMusic(self):
@@ -28,6 +30,12 @@ class GameView(ui.RootElement):
         drawing.DrawNoTexture(globals.line_buffer)
         drawing.DrawNoTexture(globals.colour_tiles)
         drawing.DrawAll(globals.nonstatic_text_buffer,globals.text_manager.atlas.texture.texture)
+
+    def EnableGrid(self):
+        self.grid.Enable()
+
+    def DisableGrid(self):
+        self.grid.Disable()
         
     def Update(self,t):
         if self.mode:
