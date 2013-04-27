@@ -505,9 +505,18 @@ class DraggableBox(HoverableBox):
             self.dragging = pos
 
 class TitleBar(HoverableBox):
-    def __init__(self,*args,**kwargs):
+    def __init__(self,parent,bl,tr,title,colour,buffer):
         self.dragging = None
-        super(TitleBar,self).__init__(*args,**kwargs)
+        super(TitleBar,self).__init__(parent,bl,tr,colour,buffer)
+        self.title = TextBox(parent = self,
+                             bl     = Point(0,0),
+                             tr     = Point(1,1),
+                             text   = title,
+                             scale  = 8,
+                             colour = drawing.constants.colours.black,
+                             textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                             alignment = drawing.texture.TextAlignments.LEFT)
+        self.title.Enable()
 
     def Depress(self,pos):
         self.dragging = pos
@@ -528,7 +537,7 @@ class CodePrimitive(UIElement):
     def __init__(self,parent,pos,tr,colour):
         self.colour = colour
         super(CodePrimitive,self).__init__(parent,pos,tr)
-        self.title_bar = TitleBar(self,Point(0,0.9),Point(1,1),colour = self.colour,buffer=globals.colour_tiles)
+        self.title_bar = TitleBar(self,Point(0,0.9),Point(1,1),"Source",colour = self.colour,buffer=globals.colour_tiles)
         self.content = Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.black,buffer = globals.colour_tiles)
         self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2]
 
