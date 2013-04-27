@@ -59,6 +59,7 @@ class UIElement(object):
         self.children = []
         self.parent.AddChild(self)
         self.GetAbsoluteInParent = parent.GetAbsolute
+        self.GetRelativeInParent = parent.GetRelative
         self.root                = parent.root
         self.level               = parent.level + 1
         self.SetBounds(pos,tr)
@@ -71,6 +72,12 @@ class UIElement(object):
         self.bottom_left          = pos
         self.top_right            = tr
         self.size                 = tr - pos
+
+    def SetPosAbsolute(self,pos):
+        """Called by the user to update our position directly"""
+        self.bottom_left = self.GetRelativeInParent(pos)
+        self.top_right   = self.bottom_left + self.size
+        self.UpdatePosition()
 
     def UpdatePosition(self):
         self.SetBounds(self.bottom_left,self.top_right)
@@ -480,6 +487,27 @@ class HoverableBox(Box,HoverableElement):
         """
         print 'hb onclick'
 
+class DraggableBox(HoverableBox):
+    def __init__(self,*args,**kwargs):
+        self.dragging = None
+        super(DraggableBox,self).__init__(*args,**kwargs)
+        print self.absolute.bottom_left,self.absolute.top_right
+        print self.bottom_left,self.top_right
+
+    def Depress(self,pos):
+        self.dragging = pos
+        print 'depress',pos
+        return self
+
+    def Undepress(self):
+        self.dragging = None
+
+    def MouseMotion(self,pos,rel,handled):
+        if self.dragging:
+            self.SetPosAbsolute(self.absolute.bottom_left + (pos - self.dragging))
+            self.dragging = pos
+
+    
 
 class TextBox(UIElement):
     """ A Screen-relative text box wraps text to a given size """

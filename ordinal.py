@@ -80,7 +80,10 @@ def main():
                 if event.type == pygame.MOUSEMOTION:
                     rel = Point(event.rel[0],-event.rel[1])
                     if globals.dragging:
-                        globals.dragging.MouseMotion(pos,rel,False)
+                        if globals.dragging is not globals.current_view and globals.dragging.root is globals.current_view.root:
+                            globals.current_view.DispatchMouseMotion(dragging,pos,rel,False)
+                        else:
+                            globals.dragging.MouseMotion(pos,rel,False)
                     else:
                         handled = globals.screen_root.MouseMotion(pos,rel,False)
                         if handled:

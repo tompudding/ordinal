@@ -117,7 +117,7 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = ui.HoverableBox(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white,buffer = globals.colour_tiles)
+        self.box = ui.DraggableBox(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white,buffer = globals.colour_tiles)
         self.box.Enable()
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
@@ -228,6 +228,11 @@ class GameView(ui.RootElement):
             self.dragging = self.viewpos.Get() + (pos/self.zoom)
         elif self.zooming:
             self.AdjustZoom(-rel.y/100.0,Point(0,0))
+
+    def DispatchMouseMotion(self,target,pos,rel,handled):
+        screen_pos = self.viewpos.Get() + (pos/self.zoom)
+        screen_rel = rel/self.zoom
+        return target.MouseMotion(screen_pos,screen_rel,handled)
 
     def AdjustZoom(self,amount,pos):
         pos_coords = self.viewpos.Get() + (pos/self.zoom)
