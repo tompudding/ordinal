@@ -127,6 +127,7 @@ class Number(ui.UIElement):
         self.level_bonus = 800 #numbers go on top
         self.num = num&0xffff
         self.target = None
+        self.start = None
         self.id = number_id
         number_id += 1
         self.launch_time = None
@@ -209,16 +210,21 @@ class Number(ui.UIElement):
     def SetTarget(self,start,target,launch_time):
         self.target       = target
         self.start        = start
-        if target is start:
-            #we're progressing across a primitive
-            self.start_pos    = start.root.GetRelative(start.input.GetAbsolute(Point(0.5,0.5)))
-            self.end_pos      = target.root.GetRelative(start.output.GetAbsolute(Point(0.5,0.5)))
-        else:
-            self.start_pos    = start.root.GetRelative(start.output.GetAbsolute(Point(0.5,0.5)))
-            self.end_pos      = target.root.GetRelative(target.input.GetAbsolute(Point(0.5,0.5)))
+        
         self.launch_time  = launch_time
         self.arrival_time = launch_time + 1
         self.duration     = float(self.arrival_time - self.launch_time)
+        self.UpdateEnds()
+        
+
+    def UpdateEnds(self):
+        if self.target is self.start:
+            #we're progressing across a primitive
+            self.start_pos    = self.start.root.GetRelative(self.start.input.GetAbsolute(Point(0.5,0.5)))
+            self.end_pos      = self.target.root.GetRelative(self.start.output.GetAbsolute(Point(0.5,0.5)))
+        else:
+            self.start_pos    = self.start.root.GetRelative(self.start.output.GetAbsolute(Point(0.5,0.5)))
+            self.end_pos      = self.target.root.GetRelative(self.target.input.GetAbsolute(Point(0.5,0.5)))
         self.vector       = self.end_pos - self.start_pos
 
     def SetNum(self,num):
@@ -289,6 +295,8 @@ class CodePrimitive(ui.UIElement):
         if self.next:
             #we own the line pointing to the next guy
             self.output.connector_line.SetVertices(self.output.GetAbsolute(Point(0.5,0.5)),self.next.input.GetAbsolute(Point(0.5,0.5)),drawing.constants.DrawLevels.ui)
+        for number in self.numbers:
+            number.UpdateEnds()
             
     def UpdateConnectedLineBackwards(self):
         if self.prev:
@@ -334,12 +342,15 @@ class CodePrimitive(ui.UIElement):
             line.SetColour(self.colour)
 
     def ProcessArrival(self,number,cycle):
+        if number.start and number.start is not self:
+            number.start.numbers.remove(number)
         number.SetTarget(self,self,cycle)
         self.numbers.add(number)
 
     def ProcessLeaving(self,number,cycle):
         self.Process(number)
-        self.numbers.remove(number)
+        #The number will get removed when it arrives at the next place
+        #self.numbers.remove(number)
         if self.next:
             number.SetTarget(self,self.next,cycle)
         else:
