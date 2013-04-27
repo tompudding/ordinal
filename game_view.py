@@ -5,6 +5,7 @@ import ui,globals,drawing,os,copy
 from globals.types import Point
 import modes
 import random
+import code
 
 class Viewpos(object):
     follow_threshold = 0
@@ -117,7 +118,7 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = ui.Source(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white)
+        self.box = code.Source(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white)
         self.box.Enable()
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
@@ -228,7 +229,7 @@ class GameView(ui.RootElement):
             self.ClampViewpos()
             self.dragging = self.viewpos.Get() + (pos/self.zoom)
         elif self.zooming:
-            self.AdjustZoom(-rel.y/100.0,Point(0,0))
+            self.AdjustZoom(-rel.y/100.0,globals.screen/2)
 
     def DispatchMouseMotion(self,target,pos,rel,handled):
         screen_pos = self.viewpos.Get() + (pos/self.zoom)
