@@ -252,6 +252,8 @@ class CodePrimitive(ui.UIElement):
         self.colour = colour
         self.next = None
         self.prev = None
+        #numbers is a list of numbers that are either inside us or on the way to the next number
+        self.numbers = set()
         super(CodePrimitive,self).__init__(parent,pos,tr)
         self.title_bar = ui.TitleBar(self,Point(0,0.9),Point(1,1),self.title,colour = self.colour,buffer=globals.colour_tiles)
         self.content = ui.Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.dark_grey,buffer = globals.colour_tiles)
@@ -260,9 +262,13 @@ class CodePrimitive(ui.UIElement):
         if self.input:
             self.input = InputButton(self,Point(0,0.4),Point(0.2,0.6)) 
             self.connectors.append( self.input )
+        else:
+            self.input = ui.UIElement(self,Point(0,0.4),Point(0.2,0.6)) 
         if self.output:
             self.output = OutputButton(self,Point(0.8,0.4),Point(1.0,0.6)) 
             self.connectors.append( self.output )
+        else:
+            self.output = ui.UIElement(self,Point(0.8,0.4),Point(1.0,0.6))
 
         self.UpdatePosition()
         self.SetColour(self.colour)
@@ -329,14 +335,19 @@ class CodePrimitive(ui.UIElement):
 
     def ProcessArrival(self,number,cycle):
         number.SetTarget(self,self,cycle)
+        self.numbers.add(number)
 
     def ProcessLeaving(self,number,cycle):
         self.Process(number)
+        self.numbers.remove(number)
         if self.next:
-            pass
+            number.SetTarget(self,self.next,cycle)
         else:
             number.Delete()
             self.parent.RemoveNumber(number)
+
+    def Process(self,number):
+        pass
 
 class SourceSymbol(ui.UIElement):
     def __init__(self,parent,bl,tr):
@@ -398,11 +409,9 @@ class Source(CodePrimitive):
 
     def Squirt(self,cycle):
         n = next(self.gen)
-        if self.next:
-            #should be 240x60
-            num = Number(self.root,self.root.GetRelative(self.output.GetAbsolute(Point(0.5,0.5))),n)
-            num.SetTarget(self,self.next,cycle)
-            self.root.AddNumber(num)
+        num = Number(self.root,self.root.GetRelative(self.output.GetAbsolute(Point(0.5,0.5))),n)
+        self.root.AddNumber(num)
+        self.ProcessArrival(num,cycle)
 
 class OneSource(Source):
     def generator(self):
