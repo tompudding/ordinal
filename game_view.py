@@ -119,7 +119,9 @@ class GameView(ui.RootElement):
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
         self.box = code.Source(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white)
+        self.inc = code.Increment(self,Point(0.7,0.7),Point(0.8,0.8),drawing.constants.colours.white)
         self.box.Enable()
+        self.inc.Enable()
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
         self.mode = modes.GameMode(self)
@@ -209,10 +211,11 @@ class GameView(ui.RootElement):
         if button == 2:
             self.zooming = None
             return True,False
-        if button == 4:
-            self.AdjustZoom(-0.5,pos)
-        elif button == 5:
-            self.AdjustZoom(+0.5,pos)
+        if not self.zooming and not self.dragging:
+            if button == 4:
+                self.AdjustZoom(-0.5,pos)
+            elif button == 5:
+                self.AdjustZoom(+0.5,pos)
         
         return False,self.IsDragging()
 

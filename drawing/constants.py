@@ -11,7 +11,7 @@ full_tc    = numpy.array([(0,0),(0,1),(1,1),(1,0)],numpy.float32)
 class colours:
     dark_green  = (0,0.5,0,1)
     light_green = (0.5,1,0.5,1)
-    dark_grey   = (0.3,0.3,0.3)
+    dark_grey   = (0.2,0.2,0.2,1)
     black       = (0,0,0,1)
     white       = (1,1,1,1)
     red         = (1,0,0,1)

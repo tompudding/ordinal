@@ -10,7 +10,7 @@ class CodePrimitive(ui.UIElement):
         self.colour = colour
         super(CodePrimitive,self).__init__(parent,pos,tr)
         self.title_bar = ui.TitleBar(self,Point(0,0.9),Point(1,1),self.title,colour = self.colour,buffer=globals.colour_tiles)
-        self.content = ui.Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.black,buffer = globals.colour_tiles)
+        self.content = ui.Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.dark_grey,buffer = globals.colour_tiles)
         self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
 
         self.UpdatePosition()
@@ -90,7 +90,23 @@ class SourceSymbol(ui.UIElement):
         for line in self.lines:
             line.SetColour(self.colour)
 
+def TextSymbolCreator(text):
+    def CreateTextObject(self,parent,bl,tr):
+        return ui.TextBox(parent = parent,
+                          bl     = bl,
+                          tr     = Point(tr.x,tr.y-0.4),
+                          text   = text,
+                          scale  = 24,
+                          colour = drawing.constants.colours.white,
+                          textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                          alignment = drawing.texture.TextAlignments.CENTRE)
+    return CreateTextObject
+
 
 class Source(CodePrimitive):
     title = "Source"
     Symbol = SourceSymbol
+
+class Increment(CodePrimitive):
+    title = "Increment"
+    Symbol = TextSymbolCreator("+1")

@@ -464,13 +464,16 @@ class Grid(UIElement):
 
 class HoverableBox(Box,HoverableElement):
     def Hover(self):
-        print 'hb hover'
+        #print 'hb hover'
+        pass
 
     def EndHover(self):
-        print 'hb endhover'
+        #print 'hb endhover'
+        pass
 
     def Depress(self,pos):
-        print 'hb depress'
+        #print 'hb depress'
+        pass
 
     def Undepress(self):
         """
@@ -478,14 +481,16 @@ class HoverableBox(Box,HoverableElement):
         over the element (In which case a OnClick is called too), or when the cursor moves off the element 
         (when OnClick is not called)
         """
-        print 'hb undepress'
+        #print 'hb undepress'
+        pass
 
     def OnClick(self,pos,button):
         """
         Called when the mouse button is pressed and released over an element (although the cursor may move
         off and return between those two events). Pos is absolute coords
         """
-        print 'hb onclick'
+        #print 'hb onclick'
+        pass
 
 class DraggableBox(HoverableBox):
     def __init__(self,*args,**kwargs):
@@ -520,7 +525,6 @@ class TitleBar(HoverableBox):
 
     def Depress(self,pos):
         self.dragging = pos
-        print 'depress',pos
         return self
 
     def Undepress(self):
