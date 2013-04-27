@@ -62,6 +62,7 @@ class UIElement(object):
         self.GetRelativeInParent = parent.GetRelative
         self.root                = parent.root
         self.level               = parent.level + 1
+        self.level_bonus         = 0
         self.SetBounds(pos,tr)
         self.enabled             = False
 
@@ -81,6 +82,7 @@ class UIElement(object):
 
     def UpdatePosition(self):
         self.SetBounds(self.bottom_left,self.top_right)
+        self.level               = self.parent.level + self.level_bonus + 1
         for child_element in self.children:
             child_element.UpdatePosition()
 
@@ -499,10 +501,12 @@ class DraggableBox(HoverableBox):
 
     def Depress(self,pos):
         self.dragging = pos
+        self.level += 100
         return self
 
     def Undepress(self):
         self.dragging = None
+        self.level -= 100
 
     def MouseMotion(self,pos,rel,handled):
         if self.dragging:
@@ -525,9 +529,12 @@ class TitleBar(HoverableBox):
 
     def Depress(self,pos):
         self.dragging = pos
+        self.parent.level_bonus = 100
         return self
 
     def Undepress(self):
+        self.parent.level_bonus = 0
+        self.parent.UpdatePosition()
         self.dragging = None
 
     def MouseMotion(self,pos,rel,handled):
@@ -640,7 +647,7 @@ class TextBox(UIElement):
             absolute_tr = self.GetAbsolute(target_tr)
             self.SetLetterVertices(i,absolute_bl,
                                    absolute_tr,
-                                   drawing.texture.TextTypes.LEVELS[self.text_type])
+                                   self.level)
             if colour:
                 quad.SetColour(colour)
             cursor.x += letter_size.x

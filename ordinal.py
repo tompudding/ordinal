@@ -81,7 +81,7 @@ def main():
                     rel = Point(event.rel[0],-event.rel[1])
                     if globals.dragging:
                         if globals.dragging is not globals.current_view and globals.dragging.root is globals.current_view.root:
-                            globals.current_view.DispatchMouseMotion(dragging,pos,rel,False)
+                            globals.current_view.DispatchMouseMotion(globals.dragging,pos,rel,False)
                         else:
                             globals.dragging.MouseMotion(pos,rel,False)
                     else:

@@ -211,7 +211,7 @@ class GameView(ui.RootElement):
         if button == 2:
             self.zooming = None
             return True,False
-        if not self.zooming and not self.dragging:
+        if not self.zooming and not globals.dragging:
             if button == 4:
                 self.AdjustZoom(-0.5,pos)
             elif button == 5:
