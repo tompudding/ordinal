@@ -66,6 +66,9 @@ class UIElement(object):
         self.SetBounds(pos,tr)
         self.enabled             = False
 
+    def Passable(self):
+        return False
+
     def SetBounds(self,pos,tr):
         self.absolute.bottom_left = self.GetAbsoluteInParent(pos)
         self.absolute.top_right   = self.GetAbsoluteInParent(tr)
@@ -85,6 +88,25 @@ class UIElement(object):
         self.level               = self.parent.level + self.level_bonus + 1
         for child_element in self.children:
             child_element.UpdatePosition()
+
+    def CollidesAny(self,element,include_parent = True):
+        """
+        Return True if the given element collides with any of our children, or any of their children
+        """
+        if element.Passable():
+            return False
+        if include_parent:
+            if not (self.absolute.bottom_left.x > element.absolute.top_right.x or
+                    self.absolute.top_right.x < element.absolute.bottom_left.x or
+                    self.absolute.bottom_left.y > element.absolute.top_right.y or
+                    self.absolute.top_right.y < element.absolute.bottom_left.y):
+                return True
+        for child in self.children:
+            if child is element or child.Passable():
+                continue
+            if child.CollidesAny(element):
+                return True
+        return False
 
     def GetAbsolute(self,p):
         return self.absolute.bottom_left + (self.absolute.size*p)
@@ -440,6 +462,9 @@ class Grid(UIElement):
             start.x += skip.x
         self.SetColour(colour)
         self.Disable()
+
+    def Passable(self):
+        return True
         
     def Delete(self):
         super(Grid,self).Delete()
@@ -528,6 +553,7 @@ class TitleBar(HoverableBox):
         self.title.Enable()
 
     def Depress(self,pos):
+        self.start_position = (self.parent.bottom_left,self.parent.top_right)
         self.dragging = pos
         self.parent.level_bonus = 100
         return self
@@ -535,6 +561,9 @@ class TitleBar(HoverableBox):
     def Undepress(self):
         self.parent.level_bonus = 0
         self.parent.UpdatePosition()
+        if self.parent.parent.CollidesAny(self.parent,include_parent = False):
+            self.parent.bottom_left,self.parent.top_right = self.start_position
+            self.parent.UpdatePosition()
         self.dragging = None
 
     def MouseMotion(self,pos,rel,handled):
