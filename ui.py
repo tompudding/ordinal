@@ -419,7 +419,6 @@ class Grid(UIElement):
             line_end = Point(end.x,start.y)
             new_line.SetVertices(start,line_end,drawing.constants.DrawLevels.grid)
             self.lines.append(new_line)
-            print 'a',start,line_end,len(self.lines)
             start.y += skip.y
         start = self.GetAbsolute(pos)
         while start.x < end.x:
@@ -428,7 +427,6 @@ class Grid(UIElement):
             line_end = Point(start.x,end.y)
             new_line.SetVertices(start,line_end,drawing.constants.DrawLevels.grid)
             self.lines.append(new_line)
-            print 'b',start,line_end,len(self.lines)
             start.x += skip.x
         self.SetColour(colour)
         self.Disable()

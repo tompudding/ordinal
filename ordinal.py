@@ -10,7 +10,7 @@ def Init():
     """Initialise everything. Run once on startup"""
     w,h = (1280,720)
     globals.tile_scale            = Point(1,1)
-    globals.scale                 = Point(4,4)
+    globals.scale                 = Point(1,1)
     globals.screen                = Point(w,h)/globals.scale
     globals.screen_root           = ui.UIRoot(Point(0,0),globals.screen)
     globals.ui_buffer             = drawing.QuadBuffer(131072)
@@ -79,10 +79,13 @@ def main():
                     continue
                 if event.type == pygame.MOUSEMOTION:
                     rel = Point(event.rel[0],-event.rel[1])
-                    handled = globals.screen_root.MouseMotion(pos,rel,False)
-                    if handled:
-                        globals.current_view.CancelMouseMotion()
-                    globals.current_view.MouseMotion(pos,rel,True if handled else False)
+                    if globals.dragging:
+                        globals.dragging.MouseMotion(pos,rel,False)
+                    else:
+                        handled = globals.screen_root.MouseMotion(pos,rel,False)
+                        if handled:
+                            globals.current_view.CancelMouseMotion()
+                        globals.current_view.MouseMotion(pos,rel,True if handled else False)
                 elif (event.type == pygame.MOUSEBUTTONDOWN):
                     for layer in globals.screen_root,globals.current_view:
                         handled,dragging = layer.MouseButtonDown(pos,event.button)
