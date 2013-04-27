@@ -348,7 +348,7 @@ class CodePrimitive(ui.UIElement):
         self.numbers.add(number)
 
     def ProcessLeaving(self,number,cycle):
-        self.Process(number)
+        self.Process(number,cycle)
         #The number will get removed when it arrives at the next place
         #self.numbers.remove(number)
         if self.next:
@@ -357,7 +357,7 @@ class CodePrimitive(ui.UIElement):
             number.Delete()
             self.parent.RemoveNumber(number)
 
-    def Process(self,number):
+    def Process(self,number,cycle):
         pass
 
 class SourceSymbol(ui.UIElement):
@@ -396,6 +396,79 @@ class SourceSymbol(ui.UIElement):
         for line in self.lines:
             line.SetColour(self.colour)
 
+class SourceSymbol(ui.UIElement):
+    def __init__(self,parent,bl,tr):
+        self.colour = drawing.constants.colours.white
+        super(SourceSymbol,self).__init__(parent,bl,tr)
+        self.lines = [drawing.Line(globals.line_buffer) for i in 0,1,2]
+        self.SetColour(self.colour)
+        self.UpdatePosition()
+
+    def UpdatePosition(self):
+        super(SourceSymbol,self).UpdatePosition()
+        self.lines[0].SetVertices(self.GetAbsolute(Point(0.5,0.25)),self.GetAbsolute(Point(0.5,0.75)),self.level+0.5)
+        self.lines[1].SetVertices(self.GetAbsolute(Point(0.4,0.65)),self.GetAbsolute(Point(0.5,0.75)),self.level+0.5)
+        self.lines[2].SetVertices(self.GetAbsolute(Point(0.6,0.65)),self.GetAbsolute(Point(0.5,0.75)),self.level+0.5)
+
+    def Delete(self):
+        super(SourceSymbol,self).Delete()
+        for line in self.lines:
+            line.Delete()
+        
+    def Disable(self):
+        if self.enabled:
+            for line in self.lines:
+                lines.Disable()
+        super(SourceSymbol,self).Disable()
+
+    def Enable(self):
+        if not self.enabled:
+            for line in self.lines:
+                line.Enable()
+        super(SourceSymbol,self).Enable()
+
+    def SetColour(self,colour):
+        self.colour = colour
+        for line in self.lines:
+            line.SetColour(self.colour)
+
+class SinkSymbol(ui.UIElement):
+    def __init__(self,parent,bl,tr):
+        self.colour = drawing.constants.colours.white
+        super(SinkSymbol,self).__init__(parent,bl,tr)
+        self.lines = [drawing.Line(globals.line_buffer) for i in 0,1,2]
+        self.SetColour(self.colour)
+        self.UpdatePosition()
+
+    def UpdatePosition(self):
+        super(SinkSymbol,self).UpdatePosition()
+        self.lines[0].SetVertices(self.GetAbsolute(Point(0.5,0.25)),self.GetAbsolute(Point(0.5,0.75)),self.level+0.5)
+        self.lines[1].SetVertices(self.GetAbsolute(Point(0.4,0.35)),self.GetAbsolute(Point(0.5,0.25)),self.level+0.5)
+        self.lines[2].SetVertices(self.GetAbsolute(Point(0.6,0.35)),self.GetAbsolute(Point(0.5,0.25)),self.level+0.5)
+
+    def Delete(self):
+        super(SinkSymbol,self).Delete()
+        for line in self.lines:
+            line.Delete()
+        
+    def Disable(self):
+        if self.enabled:
+            for line in self.lines:
+                lines.Disable()
+        super(SinkSymbol,self).Disable()
+
+    def Enable(self):
+        if not self.enabled:
+            for line in self.lines:
+                line.Enable()
+        super(SinkSymbol,self).Enable()
+
+    def SetColour(self,colour):
+        self.colour = colour
+        for line in self.lines:
+            line.SetColour(self.colour)
+
+
 def TextSymbolCreator(text):
     def CreateTextObject(self,parent,bl,tr):
         return ui.TextBox(parent = parent,
@@ -429,11 +502,37 @@ class OneSource(Source):
         while True:
             yield 1
 
+class Sink(CodePrimitive):
+    title  = "Sink"
+    Symbol = SinkSymbol
+    input  = True
+    output = False
+
+    def __init__(self,*args,**kwargs):
+        self.matched = 0
+        super(Sink,self).__init__(*args,**kwargs)
+
+    def Process(self,number,cycle):
+        if number.num == self.sequence[self.matched]:
+            self.matched += 1
+            print 'matched',self.matched
+            if self.matched == len(self.sequence):
+                #play correct noise
+                print 'finished level!'
+                self.matched = 0
+        else:
+            #play bad noise
+            print 'bad note!',number.num
+            self.matched = 0
+
+class TwoSong(Sink):
+    sequence = [2,2,2,2]
+
 class Increment(CodePrimitive):
     title  = "Increment"
     Symbol = TextSymbolCreator("+1")
     input  = True
     output = True
 
-    def Process(self,number):
+    def Process(self,number,cycle):
         number.SetNum(number.num + 1)

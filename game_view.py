@@ -119,10 +119,11 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = code.OneSource(self,Point(0.1,0.1),Point(0.2,0.2),drawing.constants.colours.white)
-        self.inc = code.Increment(self,Point(0.3,0.14),Point(0.4,0.24),drawing.constants.colours.white)
+        self.box = code.OneSource(self,Point(0.1,0.1),Point(0.25,0.2),drawing.constants.colours.white)
+        self.inc = code.Increment(self,Point(0.3,0.14),Point(0.45,0.24),drawing.constants.colours.white)
+        self.sink = code.TwoSong(self,Point(0.51,0.14),Point(0.66,0.24),drawing.constants.colours.white)
         #self.num = code.Number(self,Point(0.1,0.25),Point(0.22,0.28),40000)
-        self.timer = ui.Box(globals.screen_root,Point(0.75,0),Point(1,0.05),colour = drawing.constants.colours.white,buffer = globals.ui_buffer)
+        self.timer = ui.Box(globals.screen_root,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer)
         self.timer.text = ui.TextBox(parent = self.timer,
                                      bl     = Point(0,0),
                                      tr     = Point(1,0.90),
@@ -139,9 +140,9 @@ class GameView(ui.RootElement):
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
         self.mode = modes.GameMode(self)
-        self.viewpos = Viewpos(Point(0,0))
+        self.viewpos = Viewpos(Point(500,0))
         self.dragging = None
-        self.zoom = 1
+        self.zoom = 0.65
         self.zooming = None
         self.active_connector = False
         self.wall = pygame.time.get_ticks()
@@ -160,7 +161,6 @@ class GameView(ui.RootElement):
         return True if self.dragging else False
 
     def NewCycle(self,cycle):
-        print 'cycle',cycle,self.speed,self.t
         for source in self.sources:
             source.Squirt(cycle)
 
