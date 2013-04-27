@@ -362,9 +362,9 @@ class HoverableElement(UIElement):
     
 
 class Box(UIElement):
-    def __init__(self,parent,pos,tr,colour):
+    def __init__(self,parent,pos,tr,colour,buffer=globals.ui_buffer):
         super(Box,self).__init__(parent,pos,tr)
-        self.quad = drawing.Quad(globals.ui_buffer)
+        self.quad = drawing.Quad(buffer)
         self.colour = colour
         self.unselectable_colour = tuple(component*0.6 for component in self.colour)
         self.quad.SetColour(self.colour)

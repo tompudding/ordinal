@@ -24,8 +24,8 @@ class Viewpos(object):
         self.start_time    = None
 
     def Set(self,point):
-        self.pos = point.to_int()
-        self.NoTarget()
+        self.pos = point
+        #self.NoTarget()
 
     def SetTarget(self,point,t,rate=2,callback = None):
         #Don't fuck with the view if the player is trying to control it
@@ -117,6 +117,8 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
+        self.box = ui.Box(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white,buffer = globals.colour_tiles)
+        self.box.Enable()
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
         self.mode = modes.GameMode(self)
