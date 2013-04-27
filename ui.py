@@ -378,14 +378,14 @@ class Box(UIElement):
         self.quad.SetColour(self.colour)
         self.quad.SetVertices(self.absolute.bottom_left,
                               self.absolute.top_right,
-                              drawing.constants.DrawLevels.ui)
+                              self.level)
         self.Enable()
 
     def UpdatePosition(self):
         super(Box,self).UpdatePosition()
         self.quad.SetVertices(self.absolute.bottom_left,
                               self.absolute.top_right,
-                              drawing.constants.DrawLevels.ui)
+                              self.level)
 
     def Delete(self):
         super(Box,self).Delete()
@@ -543,6 +543,7 @@ class CodePrimitive(UIElement):
 
         self.UpdatePosition()
         self.SetColour(self.colour)
+        self.symbol = self.Symbol(self.content,Point(0,0),Point(1,1))
 
     def UpdatePosition(self):
         super(CodePrimitive,self).UpdatePosition()
@@ -561,6 +562,8 @@ class CodePrimitive(UIElement):
         super(CodePrimitive,self).Delete()
         for line in self.border:
             line.Delete()
+        for item in self.symbol:
+            item.Delete()
         
     def Disable(self):
         if self.enabled:
@@ -573,15 +576,52 @@ class CodePrimitive(UIElement):
             for line in self.border:
                 line.Enable()
         super(CodePrimitive,self).Enable()
-            
 
     def SetColour(self,colour):
         self.colour = colour
         for line in self.border:
             line.SetColour(self.colour)
 
+class SourceSymbol(UIElement):
+    def __init__(self,parent,bl,tr):
+        self.colour = drawing.constants.colours.white
+        super(SourceSymbol,self).__init__(parent,bl,tr)
+        self.lines = [drawing.Line(globals.line_buffer) for i in 0,1,2]
+        self.SetColour(self.colour)
+        self.UpdatePosition()
+
+    def UpdatePosition(self):
+        super(SourceSymbol,self).UpdatePosition()
+        self.lines[0].SetVertices(self.GetAbsolute(Point(0.5,0.25)),self.GetAbsolute(Point(0.5,0.75)),self.level+0.5)
+        self.lines[1].SetVertices(self.GetAbsolute(Point(0.4,0.65)),self.GetAbsolute(Point(0.5,0.75)),self.level+0.5)
+        self.lines[2].SetVertices(self.GetAbsolute(Point(0.6,0.65)),self.GetAbsolute(Point(0.5,0.75)),self.level+0.5)
+
+    def Delete(self):
+        super(SourceSymbol,self).Delete()
+        for line in self.lines:
+            line.Delete()
+        
+    def Disable(self):
+        if self.enabled:
+            for line in self.lines:
+                lines.Disable()
+        super(SourceSymbol,self).Disable()
+
+    def Enable(self):
+        if not self.enabled:
+            for line in self.lines:
+                line.Enable()
+        super(SourceSymbol,self).Enable()
+
+    def SetColour(self,colour):
+        self.colour = colour
+        for line in self.lines:
+            line.SetColour(self.colour)
+
+
 class Source(CodePrimitive):
     title = "Source"
+    Symbol = SourceSymbol
     
 
 class TextBox(UIElement):
