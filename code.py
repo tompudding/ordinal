@@ -22,7 +22,6 @@ class Connector(ui.HoverableElement):
         for i in xrange(self.circle_segments):
             angle = (float(i)/self.circle_segments)*twopi
             self.points.append(Point( math.cos(angle)*0.25 + 0.5,math.sin(angle)*0.25 + 0.5))
-        print self.points
         self.UpdatePosition()
         self.SetColour(self.colour)
 
@@ -114,7 +113,131 @@ class OutputButton(Connector):
         if self.connecting:
             self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),pos,drawing.constants.DrawLevels.ui)
             self.connector_line.SetColour(drawing.constants.colours.red)
+
+number_id = 0
           
+class Number(ui.UIElement):
+    title = 'Number:'
+    line_peturb = 0.5
+    target_size = Point(240,60).to_float()
+    def __init__(self,parent,pos,num):
+        global number_id
+        tr = pos + (self.target_size/parent.absolute.size)
+        super(Number,self).__init__(parent,pos,tr)
+        self.level_bonus = 800 #numbers go on top
+        self.num = num&0xffff
+        self.target = None
+        self.id = number_id
+        number_id += 1
+        self.launch_time = None
+        self.arrival_time = None
+        #we want the title bar to be 22 pixels high
+        target_height = 22
+        title_bottom = 1-(22.0/self.absolute.size.y)
+        self.title_bar = ui.NumberBar(self,Point(0,title_bottom),Point(1,1),self.title,colour = None,buffer=globals.colour_tiles)
+        self.content = ui.Box(self,Point(0,0),Point(1,title_bottom),colour = drawing.constants.colours.white,buffer = globals.colour_tiles)
+        self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
+        self.hex = ui.TextBox(parent = self,
+                              bl = Point(-0.15,0.0),
+                              tr = Point(0.95,0.25),
+                              text = ' ',
+                              scale = 6,
+                              colour = drawing.constants.colours.black,
+                              textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                              alignment = drawing.texture.TextAlignments.RIGHT)
+        self.dec = ui.TextBox(parent = self,
+                              bl = Point(0,title_bottom),
+                              tr = Point(1.05,0.97),
+                              text = ' ',
+                              scale = 7,
+                              colour = drawing.constants.colours.white,
+                              textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                              alignment = drawing.texture.TextAlignments.RIGHT)
+        self.bin = ui.TextBox(parent = self,
+                              bl = Point(-0.05,0.25),
+                              tr = Point(1.05,0.5),
+                              text = ' ',
+                              scale = 6,
+                              colour = drawing.constants.colours.black,
+                              textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                              alignment = drawing.texture.TextAlignments.RIGHT)
+        for line in self.border:
+            line.SetColour(drawing.constants.colours.white)
+        self.SetNum(self.num)
+        self.UpdatePosition()
+        self.readouts = [self.dec,self.hex,self.bin]
+        for readout in self.readouts:
+            readout.Enable()
+
+    def __hash__(self):
+        return self.id
+
+    def Update(self,t):
+        if t < self.launch_time:
+            #shouldn't even be alive!
+            return
+        if t >= self.arrival_time:
+            #we're done
+            #self.target.Process(self)
+            self.Delete()
+            self.root.RemoveNumber(self)
+        else:
+            progress = (t - self.launch_time)/self.duration
+            self.bottom_left = self.start_pos + self.vector*progress
+            self.top_right = self.bottom_left + self.size
+            self.UpdatePosition()
+
+    def Delete(self):
+        super(Number,self).Delete()
+        for line in self.border:
+            line.Delete()
+        
+    def Disable(self):
+        if self.enabled:
+            for line in self.border:
+                lines.Disable()
+        super(Number,self).Disable()
+
+    def Enable(self):
+        if not self.enabled:
+            for line in self.border:
+                line.Enable()
+        super(Number,self).Enable()
+            
+
+    def AddTarget(self,start,target,launch_time):
+        self.target       = target
+        self.start_pos    = start.root.GetRelative(start.output.GetAbsolute(Point(0.5,0.5)))
+        self.end_pos      = target.root.GetRelative(target.input.GetAbsolute(Point(0.5,0.5)))
+        self.launch_time  = launch_time
+        self.arrival_time = launch_time + 1
+        self.duration     = float(self.arrival_time - self.launch_time)
+        self.vector       = self.end_pos - self.start_pos
+
+    def SetNum(self,num):
+        self.num = num&0xffff
+        hexnum = ' '.join(('%4x' % ((self.num>>i)&0xf) for i in (12,8,4,0)))
+        binnum = ' '.join(('{:04b}'.format((self.num>>i)&0xf) for i in (12,8,4,0)))
+        decnum = '%05d' % self.num
+        self.hex.SetText(hexnum)
+        self.bin.SetText(binnum)
+        self.dec.SetText(decnum)
+
+    def UpdatePosition(self):
+        super(Number,self).UpdatePosition()
+        bottom_left  = self.absolute.bottom_left + Point(-self.line_peturb,-self.line_peturb)
+        top_right    = self.absolute.top_right   + Point(self.line_peturb,self.line_peturb)
+        top_left     = self.absolute.bottom_left + Point(-self.line_peturb,self.absolute.size.y + self.line_peturb)
+        bottom_right = self.absolute.bottom_left + Point(self.absolute.size.x + self.line_peturb,-self.line_peturb)
+        
+        self.border[0].SetVertices(bottom_left,top_left,self.level + 0.5)
+        self.border[1].SetVertices(bottom_left,bottom_right,self.level + 0.5)
+        self.border[2].SetVertices(bottom_right,top_right,self.level + 0.5)
+        self.border[3].SetVertices(top_left,top_right,self.level + 0.5)
+
+    def Passable(self):
+        return True
+
 
 class CodePrimitive(ui.UIElement):
     line_peturb = 0.5
@@ -245,12 +368,28 @@ def TextSymbolCreator(text):
                           alignment = drawing.texture.TextAlignments.CENTRE)
     return CreateTextObject
 
-
 class Source(CodePrimitive):
     title  = "Source"
     Symbol = SourceSymbol
     input  = False
     output = True
+
+    def __init__(self,*args,**kwargs):
+        self.gen = self.generator()
+        super(Source,self).__init__(*args,**kwargs)
+
+    def Squirt(self,cycle):
+        n = next(self.gen)
+        if self.next:
+            #should be 240x60
+            num = Number(self.root,self.root.GetRelative(self.output.GetAbsolute(Point(0.5,0.5))),n)
+            num.AddTarget(self,self.next,cycle)
+            self.root.AddNumber(num)
+
+class OneSource(Source):
+    def generator(self):
+        while True:
+            yield 1
 
 class Increment(CodePrimitive):
     title  = "Increment"

@@ -118,10 +118,14 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = code.Source(self,Point(0.1,0.1),Point(0.2,0.2),drawing.constants.colours.white)
+        self.box = code.OneSource(self,Point(0.1,0.1),Point(0.2,0.2),drawing.constants.colours.white)
         self.inc = code.Increment(self,Point(0.3,0.14),Point(0.4,0.24),drawing.constants.colours.white)
+        #self.num = code.Number(self,Point(0.1,0.25),Point(0.22,0.28),40000)
         self.box.Enable()
         self.inc.Enable()
+        self.sources = [self.box]
+        self.speed = 0.25/1000.0
+        self.last_speed = self.speed
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
         self.mode = modes.GameMode(self)
@@ -130,6 +134,10 @@ class GameView(ui.RootElement):
         self.zoom = 1
         self.zooming = None
         self.active_connector = False
+        self.wall = pygame.time.get_ticks()
+        self.last_cycle = 0
+        self.t = 0
+        self.numbers = set()
         self.StartMusic()
 
     def StartMusic(self):
@@ -139,6 +147,17 @@ class GameView(ui.RootElement):
 
     def IsDragging(self):
         return True if self.dragging else False
+
+    def NewCycle(self,cycle):
+        print 'cycle',cycle,self.speed,self.t
+        for source in self.sources:
+            source.Squirt(cycle)
+
+    def AddNumber(self,number):
+        self.numbers.add(number)
+
+    def RemoveNumber(self,number):
+        self.numbers.remove(number)
 
     def Draw(self):
         drawing.ResetState()
@@ -162,8 +181,18 @@ class GameView(ui.RootElement):
         if self.game_over:
             return
             
-        self.t = t
-        self.viewpos.Update(t)
+        elapsed = (t - self.wall)
+        if self.speed != 0:
+            self.t += elapsed*self.speed
+            for cycle in xrange(self.last_cycle,int(self.t)):
+                self.NewCycle(cycle+1)
+                self.last_cycle = int(self.t)
+
+        self.wall = t
+        for num in set(self.numbers):
+            num.Update(self.t)
+        
+        self.viewpos.Update(self.wall)
         self.ClampViewpos()
 
     def GameOver(self):
@@ -174,6 +203,10 @@ class GameView(ui.RootElement):
         self.mode.KeyDown(key)
 
     def KeyUp(self,key):
+        if key == pygame.K_KP_PLUS:
+            self.speed *= 1.5
+        elif key == pygame.K_KP_MINUS:
+            self.speed /= 1.5
         if key == pygame.K_DELETE:
             if self.music_playing:
                 self.music_playing = False
@@ -181,6 +214,12 @@ class GameView(ui.RootElement):
             else:
                 self.music_playing = True
                 pygame.mixer.music.set_volume(1)
+        if key == pygame.K_SPACE:
+            if self.speed != 0:
+                self.last_speed = self.speed
+                self.speed = 0
+            else:
+                self.speed = self.last_speed
         self.mode.KeyUp(key)
 
     def MouseButtonDown(self,pos,button):

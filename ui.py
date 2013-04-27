@@ -552,6 +552,20 @@ class DraggableBox(HoverableBox):
             self.SetPosAbsolute(self.absolute.bottom_left + (pos - self.dragging))
             self.dragging = pos
 
+class NumberBar(Box):
+    def __init__(self,parent,bl,tr,title,colour,buffer):
+        super(NumberBar,self).__init__(parent,bl,tr,drawing.constants.colours.black,buffer)
+        self.title = TextBox(parent = self,
+                             bl     = Point(0,0),
+                             tr     = Point(1,1),
+                             text   = title,
+                             scale  = 8,
+                             colour = drawing.constants.colours.white,
+                             textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                             alignment = drawing.texture.TextAlignments.LEFT)
+        self.title.Enable()
+
+
 class TitleBar(HoverableBox):
     def __init__(self,parent,bl,tr,title,colour,buffer):
         self.dragging = None
@@ -677,7 +691,7 @@ class TextBox(UIElement):
                 if restart:
                     continue
             
-            if cursor.x == self.margin.x and self.alignment == drawing.texture.TextAlignments.CENTRE:
+            if cursor.x == self.margin.x and self.alignment != drawing.texture.TextAlignments.LEFT:
                 #If we're at the start of a row, and we're trying to centre the text, then check to see how full this row is
                 #and if it's not full, offset so that it becomes centred
                 width = 0
@@ -687,7 +701,10 @@ class TextBox(UIElement):
                         width -= size.x
                         break
                 if width > 0:
-                    cursor.x += float(1-(self.margin.x*2)-width)/2
+                    if self.alignment == drawing.texture.TextAlignments.CENTRE:
+                        cursor.x += float(1-(self.margin.x*2)-width)/2
+                    elif self.alignment == drawing.texture.TextAlignments.RIGHT:
+                        cursor.x += float(1-(self.margin.x*2)-width)
 
             target_bl = cursor
             target_tr = target_bl + letter_size
@@ -700,7 +717,7 @@ class TextBox(UIElement):
             absolute_tr = self.GetAbsolute(target_tr)
             self.SetLetterVertices(i,absolute_bl,
                                    absolute_tr,
-                                   self.level)
+                                   self.level+0.6)
             if colour:
                 quad.SetColour(colour)
             cursor.x += letter_size.x
