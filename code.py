@@ -6,12 +6,12 @@ import math
 
 twopi = math.pi*2
 
-class InputButton(ui.HoverableElement):
+class Connector(ui.HoverableElement):
     def __init__(self,parent,bl,tr):
         self.dragging = None
         self.colour = drawing.constants.colours.white
         self.highlight_colour = drawing.constants.colours.red
-        super(InputButton,self).__init__(parent,bl,tr)
+        super(Connector,self).__init__(parent,bl,tr)
         self.circle_segments = 8
         self.circle_lines = [drawing.Line(globals.line_buffer) for i in xrange(self.circle_segments)]
         self.border = [drawing.Line(globals.line_buffer) for i in xrange(4)]
@@ -25,7 +25,7 @@ class InputButton(ui.HoverableElement):
         self.SetColour(self.colour)
 
     def UpdatePosition(self):
-        super(InputButton,self).UpdatePosition()
+        super(Connector,self).UpdatePosition()
         for i in xrange(len(self.points)):
             self.circle_lines[i].SetVertices(self.GetAbsolute(self.points[i]),self.GetAbsolute(self.points[(i+1)%len(self.points)]),self.level+0.5)
         bottom_left  = self.absolute.bottom_left 
@@ -38,9 +38,9 @@ class InputButton(ui.HoverableElement):
         self.border[2].SetVertices(bottom_right,top_right,self.level + 0.5)
         self.border[3].SetVertices(top_left,top_right,self.level + 0.5)
 
-        self.arrow[0].SetVertices(self.GetAbsolute(Point(0,0.5)),self.GetAbsolute(Point(0.5,0.5)),self.level + 0.5)
-        self.arrow[1].SetVertices(self.GetAbsolute(Point(0.4,0.4)),self.GetAbsolute(Point(0.5,0.5)),self.level + 0.5)
-        self.arrow[2].SetVertices(self.GetAbsolute(Point(0.4,0.6)),self.GetAbsolute(Point(0.5,0.5)),self.level + 0.5)
+        self.arrow[0].SetVertices(self.GetAbsolute(Point(0,0.5) + self.arrow_offset),self.GetAbsolute(Point(0.5,0.5)+ self.arrow_offset),self.level + 0.5)
+        self.arrow[1].SetVertices(self.GetAbsolute(Point(0.4,0.4) + self.arrow_offset),self.GetAbsolute(Point(0.5,0.5)+ self.arrow_offset),self.level + 0.5)
+        self.arrow[2].SetVertices(self.GetAbsolute(Point(0.4,0.6) + self.arrow_offset),self.GetAbsolute(Point(0.5,0.5)+ self.arrow_offset),self.level + 0.5)
         
     def SetColour(self,colour):
         self.colour = colour
@@ -59,6 +59,12 @@ class InputButton(ui.HoverableElement):
         for line in self.border:
             line.SetColour(self.colour)
 
+class InputButton(Connector):
+    arrow_offset = Point(0,0)
+
+class OutputButton(Connector):
+    arrow_offset = Point(0.5,0)
+
 class CodePrimitive(ui.UIElement):
     line_peturb = 0.5
     def __init__(self,parent,pos,tr,colour):
@@ -70,6 +76,8 @@ class CodePrimitive(ui.UIElement):
         self.connectors = []
         if self.input:
             self.connectors.append( InputButton(self,Point(0,0.4),Point(0.2,0.6)) )
+        if self.output:
+            self.connectors.append( OutputButton(self,Point(0.8,0.4),Point(1.0,0.6)) )
 
         self.UpdatePosition()
         self.SetColour(self.colour)
