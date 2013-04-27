@@ -24,6 +24,7 @@ class Connector(ui.HoverableElement):
             self.points.append(Point( math.cos(angle)*0.25 + 0.5,math.sin(angle)*0.25 + 0.5))
         self.UpdatePosition()
         self.SetColour(self.colour)
+        self.prev = self.next = None
 
     def UpdatePosition(self):
         super(Connector,self).UpdatePosition()
@@ -98,13 +99,15 @@ class OutputButton(Connector):
             if button == 1:
                 #did they click on something
                 hover = self.root.hovered
-                if isinstance(hover,InputButton):
+                if isinstance(hover,InputButton) and hover.parent.prev == None:
+                    print 'a'
                     self.parent.next = hover.parent
                     self.parent.next.prev = self.parent
                     self.connecting = False
                     self.parent.UpdateConnectedLineForward()
                     self.root.active_connector = None
                 else:
+                    print 'b'
                     self.connecting = False
                     self.connector_line.Disable()
                     self.root.active_connector = None

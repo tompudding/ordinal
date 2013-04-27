@@ -178,6 +178,7 @@ class GameView(ui.RootElement):
                                                     colour = drawing.constants.colours.black,
                                                     textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
                                                     alignment = drawing.texture.TextAlignments.CENTRE)
+
         self.time_controls.Enable()
         self.time_controls.paused_text.Disable()
         self.box.Enable()
