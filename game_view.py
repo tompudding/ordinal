@@ -110,6 +110,7 @@ class Viewpos(object):
 
 
 class GameView(ui.RootElement):
+    timer_update_duration = 0.01
     def __init__(self):
         self.atlas = globals.atlas = drawing.texture.TextureAtlas('tiles_atlas_0.png','tiles_atlas.txt')
         self.game_over = False
@@ -121,6 +122,15 @@ class GameView(ui.RootElement):
         self.box = code.OneSource(self,Point(0.1,0.1),Point(0.2,0.2),drawing.constants.colours.white)
         self.inc = code.Increment(self,Point(0.3,0.14),Point(0.4,0.24),drawing.constants.colours.white)
         #self.num = code.Number(self,Point(0.1,0.25),Point(0.22,0.28),40000)
+        self.timer = ui.Box(globals.screen_root,Point(0.75,0),Point(1,0.05),colour = drawing.constants.colours.white,buffer = globals.ui_buffer)
+        self.timer.text = ui.TextBox(parent = self.timer,
+                                     bl     = Point(0,0),
+                                     tr     = Point(1,0.90),
+                                     text   = ' ',
+                                     scale  = 12,
+                                     colour = drawing.constants.colours.black,
+                                     textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                     alignment = drawing.texture.TextAlignments.RIGHT)
         self.box.Enable()
         self.inc.Enable()
         self.sources = [self.box]
@@ -139,6 +149,7 @@ class GameView(ui.RootElement):
         self.t = 0
         self.numbers = set()
         self.StartMusic()
+        self.last_timer_update = 0
 
     def StartMusic(self):
         pass
@@ -187,6 +198,10 @@ class GameView(ui.RootElement):
             for cycle in xrange(self.last_cycle,int(self.t)):
                 self.NewCycle(cycle+1)
                 self.last_cycle = int(self.t)
+            if self.t > self.last_timer_update + self.timer_update_duration:
+                self.timer.text.SetText('cycle:%8f' % self.t,colour = drawing.constants.colours.black)
+                self.last_timer_update = self.t
+            
 
         self.wall = t
         for num in set(self.numbers):

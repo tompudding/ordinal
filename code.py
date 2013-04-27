@@ -124,12 +124,12 @@ class Number(ui.UIElement):
         global number_id
         tr = pos + (self.target_size/parent.absolute.size)
         super(Number,self).__init__(parent,pos,tr)
-        self.level_bonus = 800 #numbers go on top
+        self.id = number_id
+        number_id += 1
+        self.level_bonus = 800 + self.id*4 #numbers go on top
         self.num = num&0xffff
         self.target = None
         self.start = None
-        self.id = number_id
-        number_id += 1
         self.launch_time = None
         self.arrival_time = None
         #we want the title bar to be 22 pixels high
@@ -169,6 +169,7 @@ class Number(ui.UIElement):
         self.readouts = [self.dec,self.hex,self.bin]
         for readout in self.readouts:
             readout.Enable()
+        self.SetOpacity(0.8)
 
     def __hash__(self):
         return self.id
@@ -205,7 +206,6 @@ class Number(ui.UIElement):
             for line in self.border:
                 line.Enable()
         super(Number,self).Enable()
-            
 
     def SetTarget(self,start,target,launch_time):
         self.target       = target

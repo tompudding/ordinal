@@ -69,8 +69,12 @@ class UIElement(object):
     def Passable(self):
         return False
 
+    def SetColour(self,colour):
+        pass
+
     def SetOpacity(self,value):
-        self.SetColour(self.colour[:3] + (value,))
+        if hasattr(self,'colour'):
+            self.SetColour(self.colour[:3] + (value,))
         for child_element in self.children:
             child_element.SetOpacity(value)
 
