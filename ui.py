@@ -1122,25 +1122,26 @@ class TextBoxButton(TextBox):
             self.callback(pos)
 
 class Slider(UIElement):
-    def __init__(self,parent,bl,tr,points,callback):
+    def __init__(self,parent,bl,tr,points,callback,initial_index = 0):
         super(Slider,self).__init__(parent,bl,tr)
         self.points   = sorted(points,lambda x,y:cmp(x[0],y[0]))
         self.callback = callback
         self.lines    = []
-        self.uilevel  = utils.ui_level+1
+        self.uilevel  = self.level
         self.enabled  = False
         self.clickable_area = UIElement(self,Point(0.05,0),Point(0.95,1))
         line          = drawing.Quad(globals.ui_buffer)
         line_bl       = self.clickable_area.absolute.bottom_left + self.clickable_area.absolute.size*Point(0,0.3)
         line_tr       = line_bl + self.clickable_area.absolute.size*Point(1,0) + Point(0,2)
         line.SetVertices(line_bl,line_tr,self.uilevel)
+        line.SetColour(drawing.constants.colours.black)
         line.Disable()
         
         low  = self.points[ 0][0]
         high = self.points[-1][0]
         self.offsets = [float(value - low)/(high-low) if low != high else 0 for value,index in self.points]
         self.lines.append(line)
-        self.index    = 0
+        self.index    = initial_index
         self.pointer_quad = drawing.Quad(globals.ui_buffer)
         self.pointer_colour = (1,0,0,1)
         self.lines.append(self.pointer_quad)
@@ -1154,6 +1155,7 @@ class Slider(UIElement):
             line_bl = self.clickable_area.absolute.bottom_left + Point(offset,0.3)*self.clickable_area.absolute.size
             line_tr = line_bl + self.clickable_area.absolute.size*Point(0,0.2) + Point(2,0)
             line.SetVertices(line_bl,line_tr,self.uilevel)
+            line.SetColour(drawing.constants.colours.black)
             line.Disable()
             self.lines.append(line)
 

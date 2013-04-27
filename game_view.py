@@ -132,10 +132,29 @@ class GameView(ui.RootElement):
                                      colour = drawing.constants.colours.black,
                                      textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
                                      alignment = drawing.texture.TextAlignments.RIGHT)
+        self.time_controls = ui.Box(globals.screen_root,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer)
+        self.speed_points = [(v/1000.0,i) for i,v in enumerate((0,0.25,1,2,4,8))]
+        self.speed = 0.25/1000.0
+
+        self.time_controls.slider = ui.Slider(self.time_controls,
+                                              bl = Point(0.05,0.5),
+                                              tr = Point(0.95,0.95),
+                                              points = self.speed_points,
+                                              callback = self.set_speed_index,
+                                              initial_index = 1)
+
+        self.time_controls.title = ui.TextBox(parent = self.time_controls,
+                                              bl     = Point(0,0.8),
+                                              tr     = Point(1,0.97),
+                                              text   = 'Speed : %4.2f' % (self.speed*1000),
+                                              scale  = 8,
+                                              colour = drawing.constants.colours.black,
+                                              textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                              alignment = drawing.texture.TextAlignments.CENTRE)
+        self.time_controls.Enable()
         self.box.Enable()
         self.inc.Enable()
         self.sources = [self.box]
-        self.speed = 0.25/1000.0
         self.last_speed = self.speed
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
@@ -151,6 +170,13 @@ class GameView(ui.RootElement):
         self.numbers = set()
         self.StartMusic()
         self.last_timer_update = 0
+
+    def set_speed_index(self,index):
+        self.set_speed(self.speed_points[index][0])
+
+    def set_speed(self,speed):
+        self.speed = speed
+        self.time_controls.title.SetText(('Speed : %4.2f' % (self.speed*1000)),colour = drawing.constants.colours.black)
 
     def StartMusic(self):
         pass
@@ -219,9 +245,9 @@ class GameView(ui.RootElement):
 
     def KeyUp(self,key):
         if key == pygame.K_KP_PLUS:
-            self.speed *= 1.5
+            self.set_speed(self.speed * 1.5)
         elif key == pygame.K_KP_MINUS:
-            self.speed /= 1.5
+            self.set_speed(self.speed / 1.5)
         if key == pygame.K_DELETE:
             if self.music_playing:
                 self.music_playing = False
