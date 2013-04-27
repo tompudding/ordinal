@@ -178,9 +178,10 @@ class Number(ui.UIElement):
             return
         if t >= self.arrival_time:
             #we're done
-            #self.target.Process(self)
-            self.Delete()
-            self.root.RemoveNumber(self)
+            if self.target is self.start:
+                self.start.ProcessLeaving(self,self.arrival_time)
+            else:
+                self.target.ProcessArrival(self,self.arrival_time)
         else:
             progress = (t - self.launch_time)/self.duration
             self.bottom_left = self.start_pos + self.vector*progress
@@ -205,10 +206,16 @@ class Number(ui.UIElement):
         super(Number,self).Enable()
             
 
-    def AddTarget(self,start,target,launch_time):
+    def SetTarget(self,start,target,launch_time):
         self.target       = target
-        self.start_pos    = start.root.GetRelative(start.output.GetAbsolute(Point(0.5,0.5)))
-        self.end_pos      = target.root.GetRelative(target.input.GetAbsolute(Point(0.5,0.5)))
+        self.start        = start
+        if target is start:
+            #we're progressing across a primitive
+            self.start_pos    = start.root.GetRelative(start.input.GetAbsolute(Point(0.5,0.5)))
+            self.end_pos      = target.root.GetRelative(start.output.GetAbsolute(Point(0.5,0.5)))
+        else:
+            self.start_pos    = start.root.GetRelative(start.output.GetAbsolute(Point(0.5,0.5)))
+            self.end_pos      = target.root.GetRelative(target.input.GetAbsolute(Point(0.5,0.5)))
         self.launch_time  = launch_time
         self.arrival_time = launch_time + 1
         self.duration     = float(self.arrival_time - self.launch_time)
@@ -320,6 +327,17 @@ class CodePrimitive(ui.UIElement):
         for line in self.border:
             line.SetColour(self.colour)
 
+    def ProcessArrival(self,number,cycle):
+        number.SetTarget(self,self,cycle)
+
+    def ProcessLeaving(self,number,cycle):
+        self.Process(number)
+        if self.next:
+            pass
+        else:
+            number.Delete()
+            self.parent.RemoveNumber(number)
+
 class SourceSymbol(ui.UIElement):
     def __init__(self,parent,bl,tr):
         self.colour = drawing.constants.colours.white
@@ -383,7 +401,7 @@ class Source(CodePrimitive):
         if self.next:
             #should be 240x60
             num = Number(self.root,self.root.GetRelative(self.output.GetAbsolute(Point(0.5,0.5))),n)
-            num.AddTarget(self,self.next,cycle)
+            num.SetTarget(self,self.next,cycle)
             self.root.AddNumber(num)
 
 class OneSource(Source):
@@ -396,3 +414,6 @@ class Increment(CodePrimitive):
     Symbol = TextSymbolCreator("+1")
     input  = True
     output = True
+
+    def Process(self,number):
+        number.SetNum(number.num + 1)
