@@ -246,21 +246,35 @@ class GameView(ui.RootElement):
         top_left= Point(0,globals.screen.y/self.zoom)
         top_right = globals.screen/self.zoom
         bottom_right = Point(globals.screen.x/self.zoom,0)
+
+        new_viewpos = self.viewpos.Get()
+        if new_viewpos.y < 0:
+            new_viewpos.y = 0
+
+        if new_viewpos.x < 0:
+            new_viewpos.x = 0
+        
+        #now the top left
+        new_top_right = new_viewpos+top_right
+        if new_top_right.y  > self.absolute.size.y:
+            new_viewpos.y -= (new_top_right.y - self.absolute.size.y)
+
+        if new_top_right.x > self.absolute.size.x:
+            new_viewpos.x -= (new_top_right.x - self.absolute.size.x)
         
         try:
-            viewpos = self.viewpos.Get()
-            if viewpos.y < 0:
+            if new_viewpos.y < 0:
                 raise ValueError
 
-            if viewpos.x < 0:
+            if new_viewpos.x < 0:
                 raise ValueError
 
             #now the top left
-            viewpos = self.viewpos.Get()+top_right
-            if viewpos.y  > self.absolute.size.y:
+            new_top_right = new_viewpos+top_right
+            if new_top_right.y  > self.absolute.size.y:
                 raise ValueError
 
-            if viewpos.x > self.absolute.size.y:
+            if new_top_right.x > self.absolute.size.x:
                 raise ValueError
 
         except ValueError:
