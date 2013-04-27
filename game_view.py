@@ -123,6 +123,7 @@ class GameView(ui.RootElement):
         self.viewpos = Viewpos(Point(0,0))
         self.dragging = None
         self.zoom = 1
+        self.zooming = None
         self.StartMusic()
 
     def StartMusic(self):
@@ -177,18 +178,27 @@ class GameView(ui.RootElement):
 
     def MouseButtonDown(self,pos,button):
         if button == 3:
+            self.zooming = None
             self.dragging = self.viewpos.Get() + (pos/self.zoom)
             return True,self
+        if button == 2:
+            self.dragging = None
+            self.zooming = self.viewpos.Get() + (pos/self.zoom)
+            return True,self
+            
         return False,None
 
     def MouseButtonUp(self,pos,button):
         if button == 3:
             self.dragging = None
             return True,False
+        if button == 2:
+            self.zooming = None
+            return True,False
         if button == 4:
-            self.AdjustZoom(-0.2,pos)
+            self.AdjustZoom(-0.5,pos)
         elif button == 5:
-            self.AdjustZoom(+0.2,pos)
+            self.AdjustZoom(+0.5,pos)
         
         return False,self.IsDragging()
 
@@ -199,7 +209,8 @@ class GameView(ui.RootElement):
             self.viewpos.Set(self.dragging - (pos/self.zoom))
             self.ClampViewpos()
             self.dragging = self.viewpos.Get() + (pos/self.zoom)
-            print self.viewpos.Get()
+        elif self.zooming:
+            self.AdjustZoom(-rel.y/100.0,Point(0,0))
         if handled:
             return handled
 
