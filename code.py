@@ -64,10 +64,15 @@ class Connector(ui.HoverableElement):
 class InputButton(Connector):
     arrow_offset = Point(0,0)
 
+    def OnClick(self,pos,button):
+        #if you click on the input it deletes any link connecting to it
+        self.parent.BreakBackwardLink()
+
 class OutputButton(Connector):
     arrow_offset = Point(0.45,0)
     def OnClick(self,pos,button):
         if button == 1:
+            self.parent.BreakForwardLink()
             self.connecting = True
             self.connector_line.SetVertices(Point(0,0),Point(0,0),0)
             self.connector_line.Enable()
@@ -132,6 +137,17 @@ class CodePrimitive(ui.UIElement):
         self.UpdatePosition()
         self.SetColour(self.colour)
         self.symbol = self.Symbol(self.content,Point(0,0),Point(1,1))
+
+    def BreakForwardLink(self):
+        if self.next:
+            self.next.prev = None
+            self.next = None
+
+    def BreakBackwardLink(self):
+        if self.prev:
+            self.prev.next = None
+            self.prev.output.connector_line.Disable()
+            self.prev = None
 
     def UpdateConnectedLineForward(self):
         if self.next:
