@@ -117,7 +117,7 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = ui.DraggableBox(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white,buffer = globals.colour_tiles)
+        self.box = ui.CodePrimitive(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white)
         self.box.Enable()
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
@@ -140,6 +140,7 @@ class GameView(ui.RootElement):
         drawing.ResetState()
         drawing.Scale(self.zoom,self.zoom,1)
         drawing.Translate(-self.viewpos.pos.x,-self.viewpos.pos.y,0)
+        drawing.LineWidth(2)
         drawing.DrawNoTexture(globals.line_buffer)
         drawing.DrawNoTexture(globals.colour_tiles)
         drawing.DrawAll(globals.nonstatic_text_buffer,globals.text_manager.atlas.texture.texture)

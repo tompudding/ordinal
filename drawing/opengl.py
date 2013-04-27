@@ -49,6 +49,7 @@ def InitDrawing():
     glEnableClientState(GL_VERTEX_ARRAY)
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
     glEnableClientState(GL_COLOR_ARRAY)
+    glEnable(GL_LINE_SMOOTH)
     glEnable(GL_TEXTURE_2D)
 
 def DrawAll(quad_buffer,texture):
@@ -76,3 +77,7 @@ def DrawNoTexture(quad_buffer):
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
     #def Draw
+
+def LineWidth(width):
+    glEnable(GL_LINE_SMOOTH)
+    glLineWidth(width)

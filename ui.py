@@ -446,7 +446,7 @@ class Grid(UIElement):
         
     def Disable(self):
         if self.enabled:
-            for line in self.liens:
+            for line in self.lines:
                 lines.Disable()
         super(Grid,self).Disable()
 
@@ -491,8 +491,23 @@ class DraggableBox(HoverableBox):
     def __init__(self,*args,**kwargs):
         self.dragging = None
         super(DraggableBox,self).__init__(*args,**kwargs)
-        print self.absolute.bottom_left,self.absolute.top_right
-        print self.bottom_left,self.top_right
+
+    def Depress(self,pos):
+        self.dragging = pos
+        return self
+
+    def Undepress(self):
+        self.dragging = None
+
+    def MouseMotion(self,pos,rel,handled):
+        if self.dragging:
+            self.SetPosAbsolute(self.absolute.bottom_left + (pos - self.dragging))
+            self.dragging = pos
+
+class TitleBar(HoverableBox):
+    def __init__(self,*args,**kwargs):
+        self.dragging = None
+        super(TitleBar,self).__init__(*args,**kwargs)
 
     def Depress(self,pos):
         self.dragging = pos
@@ -504,9 +519,56 @@ class DraggableBox(HoverableBox):
 
     def MouseMotion(self,pos,rel,handled):
         if self.dragging:
-            self.SetPosAbsolute(self.absolute.bottom_left + (pos - self.dragging))
+            self.parent.SetPosAbsolute(self.parent.absolute.bottom_left + (pos - self.dragging))
             self.dragging = pos
+    
 
+class CodePrimitive(UIElement):
+    line_peturb = 0.5
+    def __init__(self,parent,pos,tr,colour):
+        self.colour = colour
+        super(CodePrimitive,self).__init__(parent,pos,tr)
+        self.title_bar = TitleBar(self,Point(0,0.9),Point(1,1),colour = self.colour,buffer=globals.colour_tiles)
+        self.content = Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.black,buffer = globals.colour_tiles)
+        self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2]
+
+        self.UpdatePosition()
+        self.SetColour(self.colour)
+
+    def UpdatePosition(self):
+        super(CodePrimitive,self).UpdatePosition()
+        bottom_left  = self.absolute.bottom_left + Point(-self.line_peturb,-self.line_peturb)
+        top_right    = self.absolute.top_right   + Point(self.line_peturb,self.line_peturb)
+        top_left     = self.absolute.bottom_left + Point(-self.line_peturb,self.absolute.size.y + self.line_peturb)
+        bottom_right = self.absolute.bottom_left + Point(self.absolute.size.x + self.line_peturb,-self.line_peturb)
+        
+        self.border[0].SetVertices(bottom_left,top_left,self.level + 0.5 + 100)
+        self.border[1].SetVertices(bottom_left,bottom_right,self.level + 0.5)
+        self.border[2].SetVertices(bottom_right,top_right,self.level + 0.5)
+
+
+    def Delete(self):
+        super(CodePrimitive,self).Delete()
+        for line in self.border:
+            line.Delete()
+        
+    def Disable(self):
+        if self.enabled:
+            for line in self.border:
+                lines.Disable()
+        super(CodePrimitive,self).Disable()
+
+    def Enable(self):
+        if not self.enabled:
+            for line in self.border:
+                line.Enable()
+        super(CodePrimitive,self).Enable()
+            
+
+    def SetColour(self,colour):
+        self.colour = colour
+        for line in self.border:
+            line.SetColour(self.colour)
     
 
 class TextBox(UIElement):

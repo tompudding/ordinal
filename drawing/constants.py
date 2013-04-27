@@ -2,6 +2,7 @@ import numpy
 
 class DrawLevels:
     grid      = 0
+    code      = 1
     ui        = 4000
     text      = 5000
 
