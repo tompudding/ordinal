@@ -1022,21 +1022,21 @@ class TextBoxButton(TextBox):
         #top bar
         self.hover_quads[0].SetVertices(Point(self.absolute.bottom_left.x,self.absolute.top_right.y-self.line_width),
                                         self.absolute.top_right,
-                                        drawing.constants.DrawLevels.ui+1)
+                                        self.level+1)
         #right bar
         self.hover_quads[1].SetVertices(Point(self.absolute.top_right.x-self.line_width,self.absolute.bottom_left.y),
                                         self.absolute.top_right,
-                                        drawing.constants.DrawLevels.ui+1)
+                                        self.level+1)
         
         #bottom bar
         self.hover_quads[2].SetVertices(self.absolute.bottom_left,
                                         Point(self.absolute.top_right.x,self.absolute.bottom_left.y+self.line_width),
-                                        drawing.constants.DrawLevels.ui+1)
+                                        self.level+1)
 
         #left bar
         self.hover_quads[3].SetVertices(self.absolute.bottom_left,
                                         Point(self.absolute.bottom_left.x+self.line_width,self.absolute.top_right.y),
-                                        drawing.constants.DrawLevels.ui+1)
+                                        self.level+1)
         if not self.enabled:
             for i in xrange(4):
                 self.hover_quads[i].Disable()
@@ -1159,14 +1159,26 @@ class Slider(UIElement):
             line.Disable()
             self.lines.append(line)
 
-    def SetPointer(self):
+    def SetPointer(self,new_index = None):
+        if new_index != None:
+            self.index = new_index
         offset = self.offsets[self.index]
         
+        self.SetPointerOffset(offset)
+
+    def SetPointerValue(self,value):
+        offset = ((value - self.points[0][0])/(self.points[-1][0] - self.points[0][0]))
+        self.SetPointerOffset(offset)
+
+    def SetPointerOffset(self,offset):
         pointer_bl = Point(offset,0.3) - (Point(2,10)/self.clickable_area.absolute.size)
         pointer_tr = pointer_bl + (Point(7,14)/self.clickable_area.absolute.size)
         self.pointer_ui.SetBounds(pointer_bl,pointer_tr)
         self.pointer_quad.SetVertices(self.pointer_ui.absolute.bottom_left,self.pointer_ui.absolute.top_right,self.uilevel + 0.1)
         self.pointer_quad.SetColour(self.pointer_colour)
+
+        
+        
 
     def Enable(self):
         if not self.enabled:

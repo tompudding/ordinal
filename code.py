@@ -280,6 +280,9 @@ class CodePrimitive(ui.UIElement):
         self.SetColour(self.colour)
         self.symbol = self.Symbol(self.content,Point(0,0),Point(1,1))
 
+    def Reset(self):
+        self.numbers = set()
+
     def BreakForwardLink(self):
         if self.next:
             self.next.prev = None
@@ -497,6 +500,10 @@ class Source(CodePrimitive):
         self.root.AddNumber(num)
         self.ProcessArrival(num,cycle)
 
+    def Reset(self):
+        super(Source,self).Reset()
+        self.gen = self.generator()
+
 class OneSource(Source):
     def generator(self):
         while True:
@@ -524,6 +531,10 @@ class Sink(CodePrimitive):
             #play bad noise
             print 'bad note!',number.num
             self.matched = 0
+
+    def Reset(self):
+        super(Sink,self).Reset()
+        self.matched = 0
 
 class TwoSong(Sink):
     sequence = [2,2,2,2]

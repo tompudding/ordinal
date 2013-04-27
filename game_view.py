@@ -151,11 +151,38 @@ class GameView(ui.RootElement):
                                               colour = drawing.constants.colours.black,
                                               textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
                                               alignment = drawing.texture.TextAlignments.CENTRE)
+        button_width = 0.15
+        space = (1 - 2*button_width)/3
+        button_height = (self.time_controls.absolute.size.x / self.time_controls.absolute.size.y) *button_width
+        self.time_controls.stop = ui.TextBoxButton(parent = self.time_controls,
+                                                   text   = 'S',
+                                                   pos = Point(space,space*0.6),
+                                                   tr = Point(space + button_width,space*0.6+button_height),
+                                                   colour = drawing.constants.colours.black,
+                                                   size = 19,
+                                                   callback = self.Stop,
+                                                   )
+        self.time_controls.play = ui.TextBoxButton(parent = self.time_controls,
+                                                   text   = 'P',
+                                                   pos = Point(space*2+button_width,space*0.6),
+                                                   tr = Point(space*2 + button_width*2,space*0.6+button_height),
+                                                   colour = drawing.constants.colours.black,
+                                                   size = 19,
+                                                   callback = self.Play,
+                                                   )
+        self.time_controls.paused_text = ui.TextBox(parent = self.time_controls,
+                                                    bl     = Point(0,0.0),
+                                                    tr     = Point(1,0.2),
+                                                    text   = 'Paused',
+                                                    scale  = 6,
+                                                    colour = drawing.constants.colours.black,
+                                                    textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                                    alignment = drawing.texture.TextAlignments.CENTRE)
         self.time_controls.Enable()
+        self.time_controls.paused_text.Disable()
         self.box.Enable()
         self.inc.Enable()
         self.sources = [self.box]
-        self.last_speed = self.speed
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
         self.mode = modes.GameMode(self)
@@ -170,12 +197,48 @@ class GameView(ui.RootElement):
         self.numbers = set()
         self.StartMusic()
         self.last_timer_update = 0
+        self.paused  = False
+        self.stopped = False
+
+    def Stop(self,pos):
+        """Reset the cycle count to zero, reset the sinks and the sources, and delete all the numbers on the board"""
+        self.set_speed(0)
+        self.t = 0
+        self.wall = 0
+        for number in self.numbers:
+            number.Delete()
+        self.numbers = set()
+        self.box.Reset()
+        self.sink.Reset()
+        self.set_speed(0)
+        self.timer.text.SetText('cycle:%8f' % self.t,colour = drawing.constants.colours.black)
+        self.last_timer_update = self.t
+        self.last_cycle = 0
+        self.stopped = True
+        self.paused  = False
+
+    def Play(self,pos):
+        if self.stopped:
+            self.stopped = False
+            self.set_speed(0.25/1000.0)
+        elif self.paused:
+            self.paused = False
+            self.time_controls.paused_text.Disable()
+        else:
+            self.paused = True
+            self.time_controls.paused_text.Enable()
 
     def set_speed_index(self,index):
-        self.set_speed(self.speed_points[index][0])
+        self.speed = self.speed_points[index][0]
+        self.time_controls.title.SetText(('Speed : %4.2f' % (self.speed*1000)),colour = drawing.constants.colours.black)
 
     def set_speed(self,speed):
         self.speed = speed
+        if self.speed > self.speed_points[-1][0]:
+            self.speed = self.speed_points[-1][0]
+        if self.speed < self.speed_points[0][0]:
+            self.speed = self.speed_points[0][0]
+        self.time_controls.slider.SetPointerValue(self.speed)
         self.time_controls.title.SetText(('Speed : %4.2f' % (self.speed*1000)),colour = drawing.constants.colours.black)
 
     def StartMusic(self):
@@ -219,7 +282,7 @@ class GameView(ui.RootElement):
             return
             
         elapsed = (t - self.wall)
-        if self.speed != 0:
+        if self.speed != 0 and not self.paused:
             self.t += elapsed*self.speed
             for cycle in xrange(self.last_cycle,int(self.t)):
                 self.NewCycle(cycle+1)
@@ -256,11 +319,7 @@ class GameView(ui.RootElement):
                 self.music_playing = True
                 pygame.mixer.music.set_volume(1)
         if key == pygame.K_SPACE:
-            if self.speed != 0:
-                self.last_speed = self.speed
-                self.speed = 0
-            else:
-                self.speed = self.last_speed
+            self.Play(None)
         self.mode.KeyUp(key)
 
     def MouseButtonDown(self,pos,button):
