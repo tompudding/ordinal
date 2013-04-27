@@ -1,3 +1,3 @@
-from quads  import Quad,QuadBuffer,QuadVertex,QuadBorder
+from quads  import Quad,QuadBuffer,QuadBorder,LineBuffer
 from opengl import Init,NewFrame,DrawAll,InitDrawing,DrawNoTexture,ResetState,Scale,Translate
 import texture,opengl,sprite

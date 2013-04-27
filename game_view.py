@@ -13,7 +13,9 @@ class GameView(ui.RootElement):
         #pygame.mixer.music.load('music.ogg')
         #self.music_playing = False
         super(GameView,self).__init__(Point(0,0),globals.screen)
+        #skip titles for development of the main game
         self.mode = modes.Titles(self)
+        #self.mode = modes.LevelOne(self)
         self.StartMusic()
 
     def StartMusic(self):
@@ -23,9 +25,8 @@ class GameView(ui.RootElement):
 
     def Draw(self):
         drawing.ResetState()
-        drawing.DrawAll(globals.backdrop_buffer,self.atlas.texture.texture)
-        drawing.ResetState()
-        drawing.DrawAll(globals.quad_buffer,self.atlas.texture.texture)
+        drawing.DrawNoTexture(globals.line_buffer)
+        drawing.DrawNoTexture(globals.colour_tiles)
         drawing.DrawAll(globals.nonstatic_text_buffer,globals.text_manager.atlas.texture.texture)
         
     def Update(self,t):

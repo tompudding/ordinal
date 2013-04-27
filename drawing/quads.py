@@ -1,8 +1,10 @@
 import numpy
 import drawing
 from globals.types import Point
+from drawing.opengl import GL_QUADS
+from drawing.opengl import GL_LINES
 
-class QuadBuffer(object):
+class ShapeBuffer(object):
     """
     Keeps track of a potentially large number of quads that are kept in a single contiguous array for 
     efficient rendering.
@@ -11,15 +13,15 @@ class QuadBuffer(object):
     then remembers where it's vertices and other data are in the large buffers
     """
     def __init__(self,size):
-        self.vertex_data  = numpy.zeros((size*4,3),numpy.float32)
-        self.tc_data      = numpy.zeros((size*4,2),numpy.float32)
-        self.colour_data = numpy.ones((size*4,4),numpy.float32) #RGBA default is white opaque
-        self.indices      = numpy.zeros(size*4,numpy.uint32)  #de
+        self.vertex_data  = numpy.zeros((size*self.num_points,3),numpy.float32)
+        self.tc_data      = numpy.zeros((size*self.num_points,2),numpy.float32)
+        self.colour_data = numpy.ones((size*self.num_points,4),numpy.float32) #RGBA default is white opaque
+        self.indices      = numpy.zeros(size*self.num_points,numpy.uint32)  #de
         self.size = size
-        for i in xrange(size*4):
+        for i in xrange(size*self.num_points):
             self.indices[i] = i
         self.current_size = 0
-        self.max_size     = size*4
+        self.max_size     = size*self.num_points
         self.vacant = []
 
     def next(self):
@@ -32,12 +34,12 @@ class QuadBuffer(object):
         if len(self.vacant) > 0:
             #for a vacant one we blatted the indices, so we should reset those...
             out = self.vacant.pop()
-            for i in xrange(4):
+            for i in xrange(self.num_points):
                 self.indices[out+i] = out+i
             return out
             
         out = self.current_size
-        self.current_size += 4
+        self.current_size += self.num_points
         if self.current_size >= self.max_size:
             raise NotImplemented
             # self.max_size *= 2
@@ -52,11 +54,11 @@ class QuadBuffer(object):
         much overhead
         """
         self.current_size = n
-        for i in xrange(self.size*4):
+        for i in xrange(self.size*self.num_points):
             self.indices[i] = i
         self.vacant = []
 
-    def RemoveQuad(self,index):
+    def RemoveShape(self,index):
         """
         A quad is no longer needed. Because it can be in the middle of our nice block and we can't be spending serious
         cycles moving everything, we just disable it by zeroing out it's indicies. This fragmentation has a cost in terms
@@ -64,10 +66,18 @@ class QuadBuffer(object):
         hoping it won't ever be an issue
         """
         self.vacant.append(index)
-        for i in xrange(4):
+        for i in xrange(self.num_points):
             self.indices[index+i] = 0
 
-class QuadVertex(object):
+class QuadBuffer(ShapeBuffer):
+    num_points = 4
+    draw_type = drawing.opengl.GL_QUADS
+
+class LineBuffer(ShapeBuffer):
+    num_points = 2
+    draw_type = GL_LINES
+
+class ShapeVertex(object):
     """ Convenience object to allow nice slicing of the parent buffer """
     def __init__(self,index,buffer):
         self.index = index
@@ -86,7 +96,7 @@ class QuadVertex(object):
         else:
             self.buffer[self.index + i] = value
 
-class Quad(object):
+class Shape(object):
     """
     Object representing a quad. Called with a quad buffer argument that the quad is allocated from
     """
@@ -97,13 +107,13 @@ class Quad(object):
         else:
             self.index = index
         self.source = source
-        self.vertex = QuadVertex(self.index,source.vertex_data)
-        self.tc     = QuadVertex(self.index,source.tc_data)
-        self.colour = QuadVertex(self.index,source.colour_data)
+        self.vertex = ShapeVertex(self.index,source.vertex_data)
+        self.tc     = ShapeVertex(self.index,source.tc_data)
+        self.colour = ShapeVertex(self.index,source.colour_data)
         if vertex != None:
-            self.vertex[0:4] = vertex
+            self.vertex[0:self.num_points] = vertex
         if tc != None:
-            self.tc[0:4] = tc
+            self.tc[0:self.num_points] = tc
         self.old_vertices = None
         self.deleted = False
 
@@ -113,7 +123,7 @@ class Quad(object):
         trying to use it again, which since the underlying buffers could have been reassigned would cause
         some graphical mentalness
         """
-        self.source.RemoveQuad(self.index)
+        self.source.RemoveShape(self.index)
         self.deleted = True
 
     def Disable(self):
@@ -125,8 +135,8 @@ class Quad(object):
         if self.deleted:
             return
         if self.old_vertices == None:
-            self.old_vertices = numpy.copy(self.vertex[0:4])
-            for i in xrange(4):
+            self.old_vertices = numpy.copy(self.vertex[0:self.num_points])
+            for i in xrange(self.num_points):
                 self.vertex[i] = (0,0,0)
 
     def Enable(self):
@@ -136,7 +146,7 @@ class Quad(object):
         if self.deleted:
             return
         if self.old_vertices != None:
-            for i in xrange(4):
+            for i in xrange(self.num_points):
                 self.vertex[i] = self.old_vertices[i]
             self.old_vertices = None
 
@@ -145,8 +155,8 @@ class Quad(object):
             return
         setvertices(self.vertex,bl,tr,z)
         if self.old_vertices != None:
-            self.old_vertices = numpy.copy(self.vertex[0:4])
-            for i in xrange(4):
+            self.old_vertices = numpy.copy(self.vertex[0:self.num_points])
+            for i in xrange(self.num_points):
                 self.vertex[i] = (0,0,0)
     
     def SetColour(self,colour):
@@ -158,11 +168,17 @@ class Quad(object):
         if self.deleted:
             return
         for current,target in zip(self.colour,colours):
-            for i in xrange(4):
+            for i in xrange(self.num_points):
                 current[i] = target[i]
 
     def SetTextureCoordinates(self,tc):
-        self.tc[0:4] = tc
+        self.tc[0:self.num_points] = tc
+
+class Quad(Shape):
+    num_points = 4
+
+class Line(Shape):
+    num_points = 2
 
 def setvertices(vertex,bl,tr,z):
     vertex[0] = (bl.x,bl.y,z)

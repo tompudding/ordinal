@@ -13,12 +13,11 @@ def Init():
     globals.scale                 = Point(4,4)
     globals.screen                = Point(w,h)/globals.scale
     globals.screen_root           = ui.UIRoot(Point(0,0),globals.screen)
-    globals.quad_buffer           = drawing.QuadBuffer(131072)
     globals.ui_buffer             = drawing.QuadBuffer(131072)
     globals.nonstatic_text_buffer = drawing.QuadBuffer(131072)
-    globals.backdrop_buffer       = drawing.QuadBuffer(8)
     globals.colour_tiles          = drawing.QuadBuffer(131072)
     globals.mouse_relative_buffer = drawing.QuadBuffer(1024)
+    globals.line_buffer           = drawing.LineBuffer(16384)
     globals.tile_dimensions       = Point(16,16)*globals.tile_scale
     globals.sounds                = sounds.Sounds()
 

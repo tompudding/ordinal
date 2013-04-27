@@ -60,7 +60,7 @@ def DrawAll(quad_buffer,texture):
     glVertexPointerf(quad_buffer.vertex_data)
     glTexCoordPointerf(quad_buffer.tc_data)
     glColorPointer(4,GL_FLOAT,0,quad_buffer.colour_data)
-    glDrawElements(GL_QUADS,quad_buffer.current_size,GL_UNSIGNED_INT,quad_buffer.indices)
+    glDrawElements(quad_buffer.draw_type,quad_buffer.current_size,GL_UNSIGNED_INT,quad_buffer.indices)
 
 def DrawNoTexture(quad_buffer):
     """
@@ -71,7 +71,7 @@ def DrawNoTexture(quad_buffer):
     glDisable(GL_TEXTURE_2D)
     glVertexPointerf(quad_buffer.vertex_data)
     glColorPointer(4,GL_FLOAT,0,quad_buffer.colour_data)
-    glDrawElements(GL_QUADS,quad_buffer.current_size,GL_UNSIGNED_INT,quad_buffer.indices)
+    glDrawElements(quad_buffer.draw_type,quad_buffer.current_size,GL_UNSIGNED_INT,quad_buffer.indices)
     glEnable(GL_TEXTURE_2D)
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 

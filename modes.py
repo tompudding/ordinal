@@ -33,7 +33,7 @@ class Titles(Mode):
     blurb = "ORDINAL"
     def __init__(self,parent):
         self.parent          = parent
-        self.start           = None
+        self.start           = pygame.time.get_ticks()
         self.stage           = TitleStages.STARTED
         self.handlers        = {TitleStages.STARTED  : self.Startup,
                                 TitleStages.COMPLETE : self.Complete}
@@ -55,10 +55,7 @@ class Titles(Mode):
     def KeyDown(self,key):
         self.stage = TitleStages.COMPLETE
 
-    def Update(self,t):
-        if self.start == None:
-            self.start = t
-        
+    def Update(self,t):        
         self.elapsed = t - self.start
         self.stage = self.handlers[self.stage](t)
 
@@ -66,10 +63,14 @@ class Titles(Mode):
         self.backdrop.Delete()
         self.blurb_text.Delete()
         self.parent.mode = GameOver(self.parent)
-        
 
     def Startup(self,t):
         return TitleStages.STARTED
+
+class GameMode(Mode):
+    def __init__(self,parent):
+        self.parent = parent
+        
 
 class GameOver(Mode):
     blurb = "GAME OVER"
