@@ -117,7 +117,7 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(2000,2000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
         self.grid.Disable()
-        self.box = ui.Box(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white,buffer = globals.colour_tiles)
+        self.box = ui.HoverableBox(self,Point(0.5,0.5),Point(0.6,0.6),drawing.constants.colours.white,buffer = globals.colour_tiles)
         self.box.Enable()
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
@@ -179,18 +179,28 @@ class GameView(ui.RootElement):
         self.mode.KeyUp(key)
 
     def MouseButtonDown(self,pos,button):
+        screen_pos = self.viewpos.Get() + (pos/self.zoom)
+        handled,dragging = super(GameView,self).MouseButtonDown(screen_pos,button)
+        
+        if handled:
+            return handled,dragging
         if button == 3:
             self.zooming = None
-            self.dragging = self.viewpos.Get() + (pos/self.zoom)
+            self.dragging = screen_pos
             return True,self
         if button == 2:
             self.dragging = None
-            self.zooming = self.viewpos.Get() + (pos/self.zoom)
+            self.zooming = screen_pos
             return True,self
             
         return False,None
 
     def MouseButtonUp(self,pos,button):
+        screen_pos = self.viewpos.Get() + (pos/self.zoom)
+        handled,dragging = super(GameView,self).MouseButtonUp(screen_pos,button)
+        if handled:
+            return handled,dragging
+
         if button == 3:
             self.dragging = None
             return True,False
@@ -205,7 +215,12 @@ class GameView(ui.RootElement):
         return False,self.IsDragging()
 
     def MouseMotion(self,pos,rel,handled):
+        screen_pos = self.viewpos.Get() + (pos/self.zoom)
+        screen_rel = rel/self.zoom
         self.mouse_pos = pos
+        handled = super(GameView,self).MouseMotion(screen_pos,screen_rel,handled)
+        if handled:
+            return handled
         #always do dragging
         if self.dragging:
             self.viewpos.Set(self.dragging - (pos/self.zoom))
@@ -213,8 +228,6 @@ class GameView(ui.RootElement):
             self.dragging = self.viewpos.Get() + (pos/self.zoom)
         elif self.zooming:
             self.AdjustZoom(-rel.y/100.0,Point(0,0))
-        if handled:
-            return handled
 
     def AdjustZoom(self,amount,pos):
         pos_coords = self.viewpos.Get() + (pos/self.zoom)

@@ -228,9 +228,10 @@ class RootElement(UIElement):
             if self.hovered != None:
                 self.hovered.EndHover()
         if not hovered or not self.depressed or (self.depressed and hovered is self.depressed):
-            self.hovered = hovered
-            if self.hovered:
-                self.hovered.Hover()
+            if hovered is not self.hovered:
+                self.hovered = hovered
+                if self.hovered:
+                    self.hovered.Hover()
             
         return True if hovered else False
 
@@ -455,7 +456,30 @@ class Grid(UIElement):
 
 
 class HoverableBox(Box,HoverableElement):
-    pass
+    def Hover(self):
+        print 'hb hover'
+
+    def EndHover(self):
+        print 'hb endhover'
+
+    def Depress(self,pos):
+        print 'hb depress'
+
+    def Undepress(self):
+        """
+        Called after Depress has been called, either when the button is released while the cursor is still
+        over the element (In which case a OnClick is called too), or when the cursor moves off the element 
+        (when OnClick is not called)
+        """
+        print 'hb undepress'
+
+    def OnClick(self,pos,button):
+        """
+        Called when the mouse button is pressed and released over an element (although the cursor may move
+        off and return between those two events). Pos is absolute coords
+        """
+        print 'hb onclick'
+
 
 class TextBox(UIElement):
     """ A Screen-relative text box wraps text to a given size """
