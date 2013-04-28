@@ -401,6 +401,7 @@ class GameView(ui.RootElement):
                 gointtoempty.append(num)
             else:
                 goingtofull.append(num)
+        #print len(stationary),len(goingtoempty),len(goingtofull)
         for num in itertools.chain(stationary,goingtoempty,goingtofull):
             num.Update(self.t)
         
