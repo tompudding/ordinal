@@ -752,6 +752,12 @@ class TwoSong(Sink):
     def Matched(self,item):
         globals.sounds.sweet.play()
 
+class Two2Song(Sink):
+    sequence = [2,2,2,2,2]
+    def Matched(self,item):
+        globals.sounds.sweet2.play()
+
+
 class AlternateSong(Sink):
     sequence = [2,7,2,7,2,7]
     def Matched(self,item):

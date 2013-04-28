@@ -113,7 +113,7 @@ class LevelThree(GameMode):
         super(LevelThree,self).__init__(parent)
         self.parent.AddCode(code.ArithmeticSource(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
         self.parent.AddCode(code.ArithmeticSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
-        self.parent.AddCode(code.TwoSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
+        self.parent.AddCode(code.Two2Song(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
         self.parent.Play(None)
         
     def Complete(self,blocks,cycles):
@@ -131,7 +131,7 @@ class IntroMode(Mode):
 
     - drag blocks from the bar            - connect inputs to outputs            - watch and listen                    - potato"""
     button_text = 'one'
-    target_level = LevelOne
+    target_level = LevelThree
     def __init__(self,parent):
         self.parent = parent
         self.parent.UIDisable()
