@@ -653,7 +653,6 @@ class Source(CodePrimitive):
 
     def NewCycle(self,cycle):
         n = next(self.gen)
-        comingup = [next(self.gen) for i in xrange(5)]
         num = Number(self.root,self.root.GetRelative(self.outputs[0].GetAbsolute(Point(0.5,0.5))),n)
         self.root.AddNumber(num)
         self.inputs[0].ProcessArrival(num,cycle)
@@ -672,6 +671,24 @@ class OneSource(Source):
     def generator(self):
         while True:
             yield 1
+
+class FibonacciSource(Source):
+    def generator(self):
+        last = (1,1)
+        while True:
+            n = last[0] + last[1]
+            last = (last[1],n)
+            yield n
+
+class ArithmeticSource(Source):
+    def generator(self):
+        step = 2
+        last = 0
+        while True:
+            yield last
+            last = last + step
+            
+
 
 class TwoSource(Source):
     def generator(self):
@@ -707,12 +724,14 @@ class Sink(CodePrimitive):
                 #play correct noise
                 globals.current_view.mode.Complete(len(globals.current_view.blocks),globals.current_view.last_cycle)
                 self.matched = 0
-            self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
+            if self.root.HelpShowing():
+                self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
         else:
             #play bad noise
-            print 'bad note!',number.num
+            print 'bad note!',number.num,self.sequence[self.matched:]
             self.matched = 0
-            self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
+            if self.root.HelpShowing():
+                self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
 
     def Reset(self):
         super(Sink,self).Reset()
@@ -778,6 +797,14 @@ class TwoInput(CodePrimitive):
             number.SetTarget(output,output.next,cycle)
         else:
             number.Kill()
+
+class Passthrough(CodePrimitive):
+    title = 'Passthrough'
+    short_form = 'Pas'
+    help = 'Passthrough used as a delay by one cycle'
+    Symbol = TextSymbolCreator('.')
+    input = True
+    output = True
 
 class Interleave(CodePrimitive):
     """Like a two input, but outputs each slot at a time"""
@@ -951,7 +978,7 @@ class CodeBar(ui.UIElement):
     def __init__(self,parent,bl,tr):
         super(CodeBar,self).__init__(parent,bl,tr)
         self.backdrop = ui.Box(self,Point(0,0),Point(1,1),colour = drawing.constants.colours.white,buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
-        self.max_num = 24
+        self.max_num = 36
         self.button_width = 0.08
         self.spacing = (1.0-self.button_width)/(self.max_num+1)
         self.buttons = []

@@ -214,6 +214,7 @@ class GameView(ui.RootElement):
         self.code_bar.AddButton(code.XOR)
         self.code_bar.AddButton(code.OR)
         self.code_bar.AddButton(code.TwoInterleave)
+        self.code_bar.AddButton(code.Passthrough)
 
         self.code_bar.Enable()
         
@@ -225,7 +226,7 @@ class GameView(ui.RootElement):
         self.zoom = 0.65
         self.zooming = None
         self.active_connector = False
-        self.wall = pygame.time.get_ticks()
+        self.wall = None
         self.last_cycle = 0
         self.t = 0
         self.numbers = set()
@@ -266,7 +267,7 @@ class GameView(ui.RootElement):
         """Reset the cycle count to zero, reset the sinks and the sources, and delete all the numbers on the board"""
         self.set_speed(0)
         self.t = 0
-        self.wall = 0
+        self.wall = None
         for number in self.numbers:
             number.Delete()
         self.numbers = set()
@@ -317,6 +318,9 @@ class GameView(ui.RootElement):
         else:
             self.help.Disable()
 
+    def HelpShowing(self):
+        return self.help_showing
+
     def UnshowHelp(self):
         self.help.Disable()
         self.help_showing = False
@@ -362,6 +366,9 @@ class GameView(ui.RootElement):
 
         if self.game_over:
             return
+
+        if self.wall == None:
+            self.wall = pygame.time.get_ticks()
             
         elapsed = (t - self.wall)
         if self.speed != 0 and not self.paused:

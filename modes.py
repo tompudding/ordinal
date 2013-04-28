@@ -101,6 +101,20 @@ class LevelTwo(GameMode):
         self.parent.AddCode(code.FiveSource(self.parent,Point(0.38,0.35),drawing.constants.colours.white))
         self.parent.AddCode(code.AlternateSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
         self.parent.Play(None)
+
+    def Complete(self,blocks,cycles):
+        self.parent.Stop(None)
+        self.parent.Reset()
+        self.parent.UIDisable()
+        self.parent.mode = LevelThreeIntro(self.parent,blocks,cycles)
+
+class LevelThree(GameMode):
+    def __init__(self,parent):
+        super(LevelThree,self).__init__(parent)
+        self.parent.AddCode(code.ArithmeticSource(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
+        self.parent.AddCode(code.ArithmeticSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
+        self.parent.AddCode(code.TwoSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
+        self.parent.Play(None)
         
     def Complete(self,blocks,cycles):
         self.parent.Stop(None)
@@ -159,6 +173,7 @@ class LevelTwoIntro(IntroMode):
         super(LevelTwoIntro,self).__init__(parent)
 
 class LevelThreeIntro(LevelTwoIntro):
-    target_level = GameOver
+    target_level = LevelThree
+    button_text = 'three'
     
 
