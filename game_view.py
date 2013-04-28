@@ -109,7 +109,6 @@ class Viewpos(object):
                 partial = partial*partial*(3 - 2*partial) #smoothstep
                 self.pos = (self.start_point + (self.target_change*partial)).to_int()
 
-
 class GameView(ui.RootElement):
     timer_update_duration = 0.1
     def __init__(self):
@@ -230,7 +229,7 @@ class GameView(ui.RootElement):
         self.help_showing = False
         self.sources = []
         self.blocks = []
-        self.mode = modes.IntroMode(self)
+        self.mode = modes.Titles(self)
 
     def UIEnable(self):
         self.ui.Enable()

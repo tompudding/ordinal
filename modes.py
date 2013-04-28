@@ -35,38 +35,44 @@ class Titles(Mode):
     def __init__(self,parent):
         self.parent          = parent
         self.start           = pygame.time.get_ticks()
-        self.stage           = TitleStages.STARTED
-        self.handlers        = {TitleStages.STARTED  : self.Startup,
-                                TitleStages.COMPLETE : self.Complete}
-        bl = self.parent.GetRelative(Point(0,0))
-        tr = bl + self.parent.GetRelative(globals.screen)
-        self.blurb_text = ui.TextBox(parent = self.parent,
+
+        bl = Point(0.30,0.6)
+        tr = bl + Point(0.4,0.1)
+        self.blurb_text = ui.TextBox(parent = globals.screen_root,
                                      bl     = bl         ,
                                      tr     = tr         ,
                                      text   = self.blurb ,
-                                     textType = drawing.texture.TextTypes.GRID_RELATIVE,
-                                     colour = (1,1,1,1),
-                                     scale  = 4)
-        self.backdrop        = ui.Box(parent = globals.screen_root,
-                                      pos    = Point(0,0),
-                                      tr     = Point(1,1),
-                                      colour = (0,0,0,0))
-        self.backdrop.Enable()
-
-    def KeyDown(self,key):
-        self.stage = TitleStages.COMPLETE
+                                     textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                     alignment = drawing.texture.TextAlignments.CENTRE,
+                                     colour = drawing.constants.colours.white,
+                                     scale  = 24,
+                                     level = drawing.constants.DrawLevels.ui)
+        self.play = ui.TextBoxButton(globals.screen_root ,
+                                     'Play'               ,
+                                     Point(0.4,0.25),
+                                     Point(0.6,0.3),
+                                     size=12,
+                                     callback = self.Complete,
+                                     line_width=4)
+        self.blurb_text.Enable()
+        self.parent.UIDisable()
 
     def Update(self,t):        
         self.elapsed = t - self.start
-        self.stage = self.handlers[self.stage](t)
+        t = self.elapsed/2000.0
+        y = 3*math.sin(t)
+        x = 4*math.sin(0.666*t)
+        z = ((math.sin(t)+1)/4)+0.5
+        self.parent.viewpos.Set(Point(x+4,y+3)*globals.screen*0.3)
+        self.parent.zoom = z
+        #print x,y,z
 
     def Complete(self,t):
-        self.backdrop.Delete()
         self.blurb_text.Delete()
-        self.parent.mode = GameOver(self.parent)
-
-    def Startup(self,t):
-        return TitleStages.STARTED
+        self.play.Delete()
+        self.parent.mode = IntroMode(self.parent)
+        self.parent.viewpos.Set(Point(2800,2700))
+        self.parent.zoom = 0.65
 
 class GameMode(Mode):
     def __init__(self,parent):
