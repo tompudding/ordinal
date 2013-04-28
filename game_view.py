@@ -123,7 +123,7 @@ class GameView(ui.RootElement):
         self.inc = code.Increment(self,Point(0.3,0.14),Point(0.45,0.24),drawing.constants.colours.white)
         self.sink = code.TwoSong(self,Point(0.51,0.14),Point(0.66,0.24),drawing.constants.colours.white)
         #self.num = code.Number(self,Point(0.1,0.25),Point(0.22,0.28),40000)
-        self.timer = ui.Box(globals.screen_root,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer)
+        self.timer = ui.Box(globals.screen_root,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.timer.text = ui.TextBox(parent = self.timer,
                                      bl     = Point(0,0),
                                      tr     = Point(1,0.90),
@@ -131,8 +131,9 @@ class GameView(ui.RootElement):
                                      scale  = 12,
                                      colour = drawing.constants.colours.black,
                                      textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
-                                     alignment = drawing.texture.TextAlignments.RIGHT)
-        self.time_controls = ui.Box(globals.screen_root,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer)
+                                     alignment = drawing.texture.TextAlignments.RIGHT,
+                                     level = drawing.constants.DrawLevels.ui)
+        self.time_controls = ui.Box(globals.screen_root,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.speed_points = [(v/1000.0,i) for i,v in enumerate((0,0.25,1,2,4,8))]
         self.speed = 0.25/1000.0
         self.mouse_text           = ui.TextBox(parent   = globals.screen_root,
@@ -160,7 +161,8 @@ class GameView(ui.RootElement):
                                               tr = Point(0.95,0.95),
                                               points = self.speed_points,
                                               callback = self.set_speed_index,
-                                              initial_index = 1)
+                                              initial_index = 1,
+                                              level = drawing.constants.DrawLevels.ui)
 
         self.time_controls.title = ui.TextBox(parent = self.time_controls,
                                               bl     = Point(0,0.8),
@@ -169,7 +171,8 @@ class GameView(ui.RootElement):
                                               scale  = 8,
                                               colour = drawing.constants.colours.black,
                                               textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
-                                              alignment = drawing.texture.TextAlignments.CENTRE)
+                                              alignment = drawing.texture.TextAlignments.CENTRE,
+                                              level = drawing.constants.DrawLevels.ui)
         button_width = 0.15
         space = (1 - 2*button_width)/3
         button_height = (self.time_controls.absolute.size.x / self.time_controls.absolute.size.y) *button_width
@@ -180,6 +183,7 @@ class GameView(ui.RootElement):
                                                    colour = drawing.constants.colours.black,
                                                    size = 19,
                                                    callback = self.Stop,
+                                                   level = drawing.constants.DrawLevels.ui
                                                    )
         self.time_controls.play = ui.TextBoxButton(parent = self.time_controls,
                                                    text   = 'P',
@@ -188,6 +192,7 @@ class GameView(ui.RootElement):
                                                    colour = drawing.constants.colours.black,
                                                    size = 19,
                                                    callback = self.Play,
+                                                   level = drawing.constants.DrawLevels.ui
                                                    )
         self.time_controls.paused_text = ui.TextBox(parent = self.time_controls,
                                                     bl     = Point(0,0.0),
@@ -196,10 +201,16 @@ class GameView(ui.RootElement):
                                                     scale  = 6,
                                                     colour = drawing.constants.colours.black,
                                                     textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
-                                                    alignment = drawing.texture.TextAlignments.CENTRE)
+                                                    alignment = drawing.texture.TextAlignments.CENTRE,
+                                                    level = drawing.constants.DrawLevels.ui)
 
         self.time_controls.Enable()
         self.time_controls.paused_text.Disable()
+
+        self.code_bar = ui.Box(globals.screen_root,Point(0.03,0.035),Point(0.7,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+
+
+        self.code_bar.Enable()
         self.box.Enable()
         self.inc.Enable()
         self.sources = [self.box]

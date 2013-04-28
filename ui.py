@@ -412,22 +412,23 @@ class HoverableElement(UIElement):
     
 
 class Box(UIElement):
-    def __init__(self,parent,pos,tr,colour,buffer=globals.ui_buffer):
+    def __init__(self,parent,pos,tr,colour,buffer=globals.ui_buffer,level = None):
         super(Box,self).__init__(parent,pos,tr)
         self.quad = drawing.Quad(buffer)
         self.colour = colour
         self.unselectable_colour = tuple(component*0.6 for component in self.colour)
         self.quad.SetColour(self.colour)
+        self.true_level = level
         self.quad.SetVertices(self.absolute.bottom_left,
                               self.absolute.top_right,
-                              self.level)
+                              self.level if self.true_level == None else self.true_level)
         self.Enable()
 
     def UpdatePosition(self):
         super(Box,self).UpdatePosition()
         self.quad.SetVertices(self.absolute.bottom_left,
                               self.absolute.top_right,
-                              self.level)
+                              self.level if self.true_level == None else self.true_level)
 
     def Delete(self):
         super(Box,self).Delete()
@@ -628,7 +629,7 @@ class TitleBar(HoverableBox):
     
 class TextBox(UIElement):
     """ A Screen-relative text box wraps text to a given size """
-    def __init__(self,parent,bl,tr,text,scale,colour = None,textType = drawing.texture.TextTypes.SCREEN_RELATIVE,alignment = drawing.texture.TextAlignments.LEFT):
+    def __init__(self,parent,bl,tr,text,scale,colour = None,textType = drawing.texture.TextTypes.SCREEN_RELATIVE,alignment = drawing.texture.TextAlignments.LEFT,level = None):
         if tr == None:
             #If we're given no tr; just set it to one row of text, as wide as it can get without overflowing
             #the parent
@@ -644,6 +645,7 @@ class TextBox(UIElement):
         if not self.shrink_to_fit:
             #In this case our margin is a fixed part of the box
             self.margin      = Point(0.05,0.05)
+        self.extra_level = 0 if level == None else level
         self.text        = text
         self.current_enabled = len(self.text)
         self.scale       = scale
@@ -734,7 +736,7 @@ class TextBox(UIElement):
             absolute_tr = self.GetAbsolute(target_tr)
             self.SetLetterVertices(i,absolute_bl,
                                    absolute_tr,
-                                   self.level+0.6)
+                                   self.level+self.extra_level+0.6)
             if colour:
                 quad.SetColour(colour)
             cursor.x += letter_size.x
@@ -1006,7 +1008,7 @@ class ScrollTextBox(TextBox):
             #self.UpdatePosition()
 
 class TextBoxButton(TextBox):
-    def __init__(self,parent,text,pos,tr=None,size=0.5,callback = None,line_width=2,colour=None):
+    def __init__(self,parent,text,pos,tr=None,size=0.5,callback = None,line_width=2,colour=None,level = None):
         self.callback    = callback
         self.line_width  = line_width
         self.hovered     = False
@@ -1014,7 +1016,8 @@ class TextBoxButton(TextBox):
         self.depressed   = False
         self.enabled     = False
         self.colour      = colour
-        super(TextBoxButton,self).__init__(parent,pos,tr,text,size,colour = colour)
+        self.extra_level = 0 if level == None else level
+        super(TextBoxButton,self).__init__(parent,pos,tr,text,size,colour = colour,level = level)
         for i in xrange(4):
             self.hover_quads[i].Disable()
         self.registered = False
@@ -1035,21 +1038,21 @@ class TextBoxButton(TextBox):
         #top bar
         self.hover_quads[0].SetVertices(Point(self.absolute.bottom_left.x,self.absolute.top_right.y-self.line_width),
                                         self.absolute.top_right,
-                                        self.level+1)
+                                        self.level+self.extra_level+1)
         #right bar
         self.hover_quads[1].SetVertices(Point(self.absolute.top_right.x-self.line_width,self.absolute.bottom_left.y),
                                         self.absolute.top_right,
-                                        self.level+1)
+                                        self.level + self.extra_level+1)
         
         #bottom bar
         self.hover_quads[2].SetVertices(self.absolute.bottom_left,
                                         Point(self.absolute.top_right.x,self.absolute.bottom_left.y+self.line_width),
-                                        self.level+1)
+                                        self.level + self.extra_level+1)
 
         #left bar
         self.hover_quads[3].SetVertices(self.absolute.bottom_left,
                                         Point(self.absolute.bottom_left.x+self.line_width,self.absolute.top_right.y),
-                                        self.level+1)
+                                        self.level + self.extra_level+1)
         if not self.enabled:
             for i in xrange(4):
                 self.hover_quads[i].Disable()
@@ -1135,12 +1138,12 @@ class TextBoxButton(TextBox):
             self.callback(pos)
 
 class Slider(UIElement):
-    def __init__(self,parent,bl,tr,points,callback,initial_index = 0):
+    def __init__(self,parent,bl,tr,points,callback,initial_index = 0, level = None):
         super(Slider,self).__init__(parent,bl,tr)
         self.points   = sorted(points,lambda x,y:cmp(x[0],y[0]))
         self.callback = callback
         self.lines    = []
-        self.uilevel  = self.level
+        self.uilevel  = self.level if level == None else level + self.level
         self.enabled  = False
         self.clickable_area = UIElement(self,Point(0.05,0),Point(0.95,1))
         line          = drawing.Quad(globals.ui_buffer)
