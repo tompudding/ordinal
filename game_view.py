@@ -134,25 +134,15 @@ class GameView(ui.RootElement):
         self.time_controls = ui.Box(self.ui,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.speed_points = [(v/1000.0,i) for i,v in enumerate((0,0.25,1,2,4,8))]
         self.speed = 0.25/1000.0
-        self.mouse_text           = ui.TextBox(parent   = self.ui,
-                                               bl       = Point(0.005,0.005)  ,
-                                               tr       = None                ,
-                                               text     = ' '                 ,
-                                               scale    = 8                   ,
-                                               textType = drawing.texture.TextTypes.MOUSE_RELATIVE)
 
         self.mouse_text_colour    = (1,1,1,1)
-        self.help = ui.Box(self.ui,Point(0.05,0.6),Point(0.40,0.95),colour = drawing.constants.colours.dark_grey,buffer = globals.ui_buffer)
-        self.help.titlebar = ui.HelpBar(self.help,Point(0,0.9),Point(1,1),'Help (h to close)',colour = None,buffer=globals.ui_buffer)
-        self.help.text = ui.TextBox(parent = self.help,
-                                    bl     = Point(0,0),
-                                    tr     = Point(1,0.8),
-                                    text   = ' '*10,
-                                    scale  = 6,
-                                    colour = drawing.constants.colours.white,
-                                    textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
-                                    alignment = drawing.texture.TextAlignments.LEFT)
-        self.help.Disable()
+        self.mouse_backdrop = ui.Box(self.ui,Point(0.005,0.005),Point(0.3,0.06),colour = drawing.constants.colours.black,buffer = globals.mouse_relative_tiles,level = drawing.constants.DrawLevels.ui)
+        self.mouse_text           = ui.TextBox(parent   = self.mouse_backdrop,
+                                               bl       = Point(0,0)  ,
+                                               tr       = Point(1,1)      ,
+                                               text     = ' '                 ,
+                                               scale    = 6                   ,
+                                               textType = drawing.texture.TextTypes.MOUSE_RELATIVE,level = drawing.constants.DrawLevels.ui)
 
         self.time_controls.slider = ui.Slider(self.time_controls,
                                               bl = Point(0.05,0.5),
@@ -244,7 +234,7 @@ class GameView(ui.RootElement):
     def UIEnable(self):
         self.ui.Enable()
         if not self.help_enabled or not self.help_showing:
-            self.help.Disable()
+            self.mouse_backdrop.Disable()
         if not self.paused:
             self.time_controls.paused_text.Disable()
 
@@ -313,18 +303,18 @@ class GameView(ui.RootElement):
         #self.music_playing = True
 
     def SetHelpText(self,text):
-        self.help.text.SetText(text,colour = drawing.constants.colours.white)
+        self.mouse_text.SetText(text,colour = drawing.constants.colours.white)
         self.help_showing = True
         if self.help_enabled:
-            self.help.Enable()
+            self.mouse_backdrop.Enable()
         else:
-            self.help.Disable()
+            self.mouse_backdrop.Disable()
 
     def HelpShowing(self):
         return self.help_showing
 
     def UnshowHelp(self):
-        self.help.Disable()
+        self.mouse_backdrop.Disable()
         self.help_showing = False
 
     def IsDragging(self):
@@ -355,6 +345,7 @@ class GameView(ui.RootElement):
         drawing.ResetState()
         drawing.Translate(self.mouse_pos.x,self.mouse_pos.y,10)
         drawing.DrawAll(globals.mouse_relative_buffer,globals.text_manager.atlas.texture.texture)
+        drawing.DrawNoTexture(globals.mouse_relative_tiles)
 
     def EnableGrid(self):
         self.grid.Enable()
@@ -415,11 +406,11 @@ class GameView(ui.RootElement):
             if self.help_enabled:
                 self.help_enabled = False
                 if self.help_showing:
-                    self.help.Disable()
+                    self.mouse_backdrop.Disable()
             else:
                 self.help_enabled = True
                 if self.help_showing:
-                    self.help.Enable()
+                    self.mouse_backdrop.Enable()
         self.mode.KeyUp(key)
 
     def GetScreen(self,pos):
