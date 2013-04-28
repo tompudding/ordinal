@@ -87,11 +87,27 @@ class LevelOne(GameMode):
         self.parent.AddCode(self.sink)
         self.parent.Play(None)
         
-    def Complete(self):
+    def Complete(self,blocks,cycles):
         self.parent.Stop(None)
         self.parent.Reset()
         self.parent.UIDisable()
-        self.parent.mode = LevelTwoIntro(self.parent)
+        self.parent.mode = LevelTwoIntro(self.parent,blocks,cycles)
+
+class LevelTwo(GameMode):
+    def __init__(self,parent):
+        super(LevelTwo,self).__init__(parent)
+        self.parent.AddCode(code.TwoSource(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
+        self.parent.AddCode(code.ThreeSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
+        self.parent.AddCode(code.FiveSource(self.parent,Point(0.38,0.35),drawing.constants.colours.white))
+        self.parent.AddCode(code.AlternateSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
+        self.parent.Play(None)
+        
+    def Complete(self,blocks,cycles):
+        self.parent.Stop(None)
+        self.parent.Reset()
+        self.parent.UIDisable()
+        self.parent.mode = LevelThreeIntro(self.parent,blocks,cycles)
+
 
 class IntroMode(Mode):
     """ The Intro mode just shows a big text box explaining how to play and has an ok button on it"""
@@ -101,7 +117,7 @@ class IntroMode(Mode):
 
     - drag blocks from the bar            - connect inputs to outputs            - watch and listen                    - potato"""
     button_text = 'one'
-    target_level = LevelOne
+    target_level = LevelTwo
     def __init__(self,parent):
         self.parent = parent
         self.parent.UIDisable()
@@ -133,7 +149,11 @@ class GameOver(IntroMode):
     target_level = quit
                                    
 class LevelTwoIntro(IntroMode):
-    blurb = 'level 2'
+    blurb = 'You used {num_symbols} code blocks and took {cycles} cycles. Try to do better on the next level'
+    target_level = LevelTwo
     button_text = 'two'
-    target_level = GameOver
+
+    def __init__(self,parent,blocks,cycles):
+        self.blurb = self.blurb.format(num_symbols = blocks,cycles = cycles)
+        super(LevelTwoIntro,self).__init__(parent)
 

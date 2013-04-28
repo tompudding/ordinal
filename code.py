@@ -30,6 +30,7 @@ class Connector(ui.HoverableElement):
                 self.points.append(Point( math.cos(angle)*0.25 + 0.5,math.sin(angle)*0.25 + 0.5))
         self.UpdatePosition()
         self.SetColour(self.colour)
+        self.connecting = False
         self.prev = self.next = None
 
     def UpdatePosition(self):
@@ -225,7 +226,7 @@ class SinkInputButton(InputButton):
 
     def Hover(self):
         super(SinkInputButton,self).Hover()
-        self.root.SetHelpText(self.message + ' '.join('%d' % v for v in self.parent.sequence))
+        self.root.SetHelpText(self.message + ' '.join('%d' % v for v in self.parent.sequence[self.parent.matched:]))
         
     def EndHover(self):
         super(SinkInputButton,self).EndHover()
@@ -646,6 +647,7 @@ class Source(CodePrimitive):
 
     def Squirt(self,cycle):
         n = next(self.gen)
+        comingup = [next(self.gen) for i in xrange(5)]
         num = Number(self.root,self.root.GetRelative(self.outputs[0].GetAbsolute(Point(0.5,0.5))),n)
         self.root.AddNumber(num)
         self.inputs[0].ProcessArrival(num,cycle)
@@ -659,10 +661,27 @@ class Source(CodePrimitive):
         pass
 
 
+#Should really do the following with a decorator I think but I don't have time to look up the syntax
 class OneSource(Source):
     def generator(self):
         while True:
             yield 1
+
+class TwoSource(Source):
+    def generator(self):
+        while True:
+            yield 2
+
+class ThreeSource(Source):
+    def generator(self):
+        while True:
+            yield 3
+
+class FiveSource(Source):
+    def generator(self):
+        while True:
+            yield 5
+
 
 class Sink(CodePrimitive):
     title  = "Sink"
@@ -680,12 +699,14 @@ class Sink(CodePrimitive):
             self.matched += 1
             if self.matched == len(self.sequence):
                 #play correct noise
-                globals.current_view.mode.Complete()
+                globals.current_view.mode.Complete(len(globals.current_view.blocks),globals.current_view.last_cycle)
                 self.matched = 0
+            self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
         else:
             #play bad noise
             print 'bad note!',number.num
             self.matched = 0
+            self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
 
     def Reset(self):
         super(Sink,self).Reset()
@@ -698,6 +719,9 @@ class Sink(CodePrimitive):
 
 class TwoSong(Sink):
     sequence = [2,2,2,2]
+
+class AlternateSong(Sink):
+    sequence = [2,7,2,7,2,7]
 
 class Increment(CodePrimitive):
     title  = "Increment"
