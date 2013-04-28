@@ -119,11 +119,12 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(8000,8000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(80,80))
         self.grid.Disable()
-        self.box = code.OneSource(self,Point(0.38,0.4),drawing.constants.colours.white)
-        self.inc = code.Increment(self,Point(0.45,0.41),drawing.constants.colours.white)
-        self.sink = code.TwoSong(self,Point(0.52,0.39),drawing.constants.colours.white)
+        #self.box = code.OneSource(self,Point(0.38,0.4),drawing.constants.colours.white)
+        #self.inc = code.Increment(self,Point(0.45,0.41),drawing.constants.colours.white)
+        #self.sink = code.TwoSong(self,Point(0.52,0.39),drawing.constants.colours.white)
         #self.num = code.Number(self,Point(0.1,0.25),Point(0.22,0.28),40000)
-        self.timer = ui.Box(globals.screen_root,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.ui = ui.UIElement(globals.screen_root,Point(0,0),Point(1,1)) 
+        self.timer = ui.Box(self.ui,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.timer.text = ui.TextBox(parent = self.timer,
                                      bl     = Point(0,0),
                                      tr     = Point(1,0.90),
@@ -133,10 +134,10 @@ class GameView(ui.RootElement):
                                      textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
                                      alignment = drawing.texture.TextAlignments.RIGHT,
                                      level = drawing.constants.DrawLevels.ui)
-        self.time_controls = ui.Box(globals.screen_root,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.time_controls = ui.Box(self.ui,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.speed_points = [(v/1000.0,i) for i,v in enumerate((0,0.25,1,2,4,8))]
         self.speed = 0.25/1000.0
-        self.mouse_text           = ui.TextBox(parent   = globals.screen_root,
+        self.mouse_text           = ui.TextBox(parent   = self.ui,
                                                bl       = Point(0.005,0.005)  ,
                                                tr       = None                ,
                                                text     = ' '                 ,
@@ -144,7 +145,7 @@ class GameView(ui.RootElement):
                                                textType = drawing.texture.TextTypes.MOUSE_RELATIVE)
 
         self.mouse_text_colour    = (1,1,1,1)
-        self.help = ui.Box(globals.screen_root,Point(0.05,0.6),Point(0.40,0.95),colour = drawing.constants.colours.dark_grey,buffer = globals.ui_buffer)
+        self.help = ui.Box(self.ui,Point(0.05,0.6),Point(0.40,0.95),colour = drawing.constants.colours.dark_grey,buffer = globals.ui_buffer)
         self.help.titlebar = ui.HelpBar(self.help,Point(0,0.9),Point(1,1),'Help (h to close)',colour = None,buffer=globals.ui_buffer)
         self.help.text = ui.TextBox(parent = self.help,
                                     bl     = Point(0,0),
@@ -207,17 +208,15 @@ class GameView(ui.RootElement):
         self.time_controls.Enable()
         self.time_controls.paused_text.Disable()
 
-        self.code_bar = code.CodeBar(globals.screen_root,Point(0.03,0.035),Point(0.7,0.2))
+        self.code_bar = code.CodeBar(self.ui,Point(0.03,0.035),Point(0.7,0.2))
         self.code_bar.AddButton(code.Increment)
 
 
         self.code_bar.Enable()
-        self.box.Enable()
-        self.inc.Enable()
-        self.sources = [self.box]
+        
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
-        self.mode = modes.GameMode(self)
+        
         self.viewpos = Viewpos(Point(2800,2700))
         self.dragging = None
         self.zoom = 0.65
@@ -234,6 +233,30 @@ class GameView(ui.RootElement):
         self.mouse_pos = Point(0,0)
         self.help_enabled = True
         self.help_showing = False
+        self.sources = []
+        self.blocks = []
+        self.mode = modes.IntroMode(self)
+
+    def UIEnable(self):
+        self.ui.Enable()
+        if not self.help_enabled or not self.help_showing:
+            self.help.Disable()
+
+    def UIDisable(self):
+        self.ui.Disable()
+
+    def Reset(self):
+        self.Stop(None)
+        for code in self.blocks:
+            code.Delete()
+        self.sources = []
+        self.blocks = []
+
+    def AddCode(self,new_code):
+        self.blocks.append(new_code)
+        if isinstance(new_code,code.Source):
+            self.sources.append(new_code)
+        new_code.Enable()
 
     def Stop(self,pos):
         """Reset the cycle count to zero, reset the sinks and the sources, and delete all the numbers on the board"""
@@ -243,8 +266,8 @@ class GameView(ui.RootElement):
         for number in self.numbers:
             number.Delete()
         self.numbers = set()
-        self.box.Reset()
-        self.sink.Reset()
+        for code in self.blocks:
+            code.Reset()
         self.set_speed(0)
         self.timer.text.SetText('cycle:%8f' % self.t,colour = drawing.constants.colours.black)
         self.last_timer_update = self.t
@@ -305,7 +328,11 @@ class GameView(ui.RootElement):
         self.numbers.add(number)
 
     def RemoveNumber(self,number):
-        self.numbers.remove(number)
+        try:
+            self.numbers.remove(number)
+        except KeyError:
+            #it's already been deleted, probably by a global reset. Whatever!
+            pass
 
     def Draw(self):
         drawing.ResetState()

@@ -4,6 +4,7 @@ import random,numpy,cmath,math,pygame
 import ui,globals,drawing,os,copy
 from globals.types import Point
 import sys
+import code
 
 class Mode(object):
     """ Abstract base class to represent game modes """
@@ -71,76 +72,68 @@ class GameMode(Mode):
     def __init__(self,parent):
         self.parent = parent
         self.parent.EnableGrid()
-        
+        self.parent.Reset()
+        self.parent.UIEnable()
 
-class GameOver(Mode):
-    blurb = "GAME OVER"
+    def Complete(self):
+        pass
+
+class LevelOne(GameMode):
     def __init__(self,parent):
-        self.parent          = parent
-        self.blurb           = self.blurb
-        self.blurb_text      = None
-        self.handlers        = {TitleStages.TEXT    : self.TextDraw,
-                                TitleStages.SCROLL  : self.Wait,
-                                TitleStages.WAIT    : self.Wait}
-        self.backdrop        = ui.Box(parent = globals.screen_root,
-                                      pos    = Point(0,0),
-                                      tr     = Point(1,1),
-                                      colour = (0,0,0,0.6))
+        super(LevelOne,self).__init__(parent)
+        self.source = code.OneSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white)
+        self.sink   = code.TwoSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white)
+        self.parent.AddCode(self.source)
+        self.parent.AddCode(self.sink)
+        self.parent.Play(None)
         
-        bl = self.parent.GetRelative(Point(0,0))
-        tr = bl + self.parent.GetRelative(globals.screen)
-        self.blurb_text = ui.TextBox(parent = globals.screen_root,
-                                     bl     = bl         ,
-                                     tr     = tr         ,
-                                     text   = self.blurb ,
-                                     textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
-                                     scale  = 3)
+    def Complete(self):
+        self.parent.Stop(None)
+        self.parent.Reset()
+        self.parent.UIDisable()
+        self.parent.mode = LevelTwoIntro(self.parent)
 
-        self.start = None
-        self.blurb_text.EnableChars(0)
-        self.stage = TitleStages.TEXT
-        self.played_sound = False
-        self.skipped_text = False
-        self.letter_duration = 20
-        self.continued = False
-        #pygame.mixer.music.load('end_fail.mp3')
-        #pygame.mixer.music.play(-1)
+class IntroMode(Mode):
+    """ The Intro mode just shows a big text box explaining how to play and has an ok button on it"""
+    blurb = """Ordinal
 
-    def Update(self,t):
-        if self.start == None:
-            self.start = t
-        self.elapsed = t - self.start
-        self.stage = self.handlers[self.stage](t)
-        if self.stage == TitleStages.COMPLETE:
-            raise sys.exit('Come again soon!')
+  In which you must guide numbers from sinks to sources to create beautiful music
 
-    def Wait(self,t):
-        return self.stage
+    - drag blocks from the bar            - connect inputs to outputs            - watch and listen                    - potato"""
+    button_text = 'one'
+    target_level = LevelOne
+    def __init__(self,parent):
+        self.parent = parent
+        self.parent.UIDisable()
+        if not self.parent.paused:
+            self.parent.Play(None) #pause it
+        self.level = drawing.constants.DrawLevels.ui + 500
+        self.backdrop = ui.Box(globals.screen_root,Point(0.1,0.1),Point(0.9,0.9),colour = drawing.constants.colours.dark_grey,buffer = globals.ui_buffer,level = self.level)
+        self.backdrop.Enable()
+        self.intro_text = ui.TextBox(self.backdrop,Point(0,0.1),Point(1,0.9),text = self.blurb,scale=12,colour = drawing.constants.colours.white,level = self.level + 1)
+        self.play_button = ui.TextBoxButton(parent = self.backdrop,
+                                            text = self.button_text,
+                                            pos = Point(0.42,0.1),
+                                            tr = Point(0.58,0.2),
+                                            colour = drawing.constants.colours.white,
+                                            size = 24,
+                                            callback = self.Play,
+                                            level = self.level + 1)
 
-    def SkipText(self):
-        if self.blurb_text:
-            self.skipped_text = True
-            self.blurb_text.EnableChars()
+    def Play(self,pos):
+        self.backdrop.Delete()
+        self.parent.mode = self.target_level(self.parent)
 
-    def TextDraw(self,t):
-        if not self.skipped_text:
-            if self.elapsed < (len(self.blurb_text.text)*self.letter_duration) + 2000:
-                num_enabled = int(self.elapsed/self.letter_duration)
-                self.blurb_text.EnableChars(num_enabled)
-            else:
-                self.skipped_text = True
-        elif self.continued:
-            return TitleStages.COMPLETE
-        return TitleStages.TEXT
+def quit(self,parent):
+    raise SystemExit('bye')
 
+class GameOver(IntroMode):
+    blurb = 'goodbye'
+    button_text = 'zero'
+    target_level = quit
+                                   
+class LevelTwoIntro(IntroMode):
+    blurb = 'level 2'
+    button_text = 'two'
+    target_level = GameOver
 
-    def KeyDown(self,key):
-        #if key in [13,27,32]: #return, escape, space
-        if not self.skipped_text:
-            self.SkipText()
-        else:
-            self.continued = True
-
-    def MouseButtonDown(self,pos,button):
-        self.KeyDown(0)
-        return False,False

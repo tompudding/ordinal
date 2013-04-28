@@ -492,7 +492,7 @@ class SourceSymbol(ui.UIElement):
     def Disable(self):
         if self.enabled:
             for line in self.lines:
-                lines.Disable()
+                line.Disable()
         super(SourceSymbol,self).Disable()
 
     def Enable(self):
@@ -528,7 +528,7 @@ class SinkSymbol(ui.UIElement):
     def Disable(self):
         if self.enabled:
             for line in self.lines:
-                lines.Disable()
+                line.Disable()
         super(SinkSymbol,self).Disable()
 
     def Enable(self):
@@ -602,7 +602,7 @@ class Sink(CodePrimitive):
             self.matched += 1
             if self.matched == len(self.sequence):
                 #play correct noise
-                print 'finished level!'
+                globals.current_view.mode.Complete()
                 self.matched = 0
         else:
             #play bad noise
@@ -665,6 +665,7 @@ class CodeCreator(ui.HoverableElement):
             else:
                 new_code.level_bonus = 0
                 new_code.UpdatePosition()
+                globals.current_view.AddCode(new_code)
         self.dragging = None
 
     def MouseMotion(self,pos,rel,handled):
