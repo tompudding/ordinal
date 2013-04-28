@@ -35,6 +35,8 @@ class Titles(Mode):
     def __init__(self,parent):
         self.parent          = parent
         self.start           = pygame.time.get_ticks()
+        pygame.mixer.music.load('titles.ogg')
+        pygame.mixer.music.play(-1)
 
         bl = Point(0.30,0.6)
         tr = bl + Point(0.4,0.1)
@@ -70,6 +72,7 @@ class Titles(Mode):
     def Complete(self,t):
         self.blurb_text.Delete()
         self.play.Delete()
+        pygame.mixer.music.stop()
         self.parent.mode = IntroMode(self.parent)
         self.parent.viewpos.Set(Point(2800,2700))
         self.parent.zoom = 0.65
@@ -92,11 +95,14 @@ class LevelOne(GameMode):
         self.parent.AddCode(self.source)
         self.parent.AddCode(self.sink)
         self.parent.Play(None)
+        pygame.mixer.music.load('ticks.ogg')
+        pygame.mixer.music.play(-1)
         
     def Complete(self,blocks,cycles):
         self.parent.Stop(None)
         self.parent.Reset()
         self.parent.UIDisable()
+        pygame.mixer.music.stop()
         self.parent.mode = LevelTwoIntro(self.parent,blocks,cycles)
 
 class LevelTwo(GameMode):
@@ -107,12 +113,14 @@ class LevelTwo(GameMode):
         self.parent.AddCode(code.FiveSource(self.parent,Point(0.38,0.35),drawing.constants.colours.white))
         self.parent.AddCode(code.AlternateSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
         self.parent.Play(None)
+        pygame.mixer.music.play(-1)
 
     def Complete(self,blocks,cycles):
         self.parent.Stop(None)
         self.parent.Reset()
         self.parent.UIDisable()
         self.parent.mode = LevelThreeIntro(self.parent,blocks,cycles)
+        pygame.mixer.music.stop()
 
 class LevelThree(GameMode):
     def __init__(self,parent):
@@ -121,12 +129,14 @@ class LevelThree(GameMode):
         self.parent.AddCode(code.ArithmeticSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
         self.parent.AddCode(code.Two2Song(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
         self.parent.Play(None)
+        pygame.mixer.music.play(-1)
         
     def Complete(self,blocks,cycles):
         self.parent.Stop(None)
         self.parent.Reset()
         self.parent.UIDisable()
         self.parent.mode = LevelFourIntro(self.parent,blocks,cycles)
+        pygame.mixer.music.stop()
 
 
 class IntroMode(Mode):
@@ -137,7 +147,7 @@ class IntroMode(Mode):
 
     - drag blocks from the bar            - connect inputs to outputs            - watch and listen                    - potato"""
     button_text = 'one'
-    target_level = LevelThree
+    target_level = LevelOne
     def __init__(self,parent):
         self.parent = parent
         self.parent.UIDisable()

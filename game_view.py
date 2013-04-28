@@ -280,8 +280,10 @@ class GameView(ui.RootElement):
         elif self.paused:
             self.paused = False
             self.time_controls.paused_text.Disable()
+            pygame.mixer.music.unpause()
         else:
             self.paused = True
+            pygame.mixer.music.pause()
             self.time_controls.paused_text.Enable()
 
     def set_speed_index(self,index):
