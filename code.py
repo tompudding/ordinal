@@ -762,6 +762,73 @@ class Add(TwoInput):
         number.SetNum(number.num + number.other_num)
         number.other_num = None
 
+class Sub(TwoInput):
+    title = "Subtract"
+    short_form = "Sub"
+    help = """Subtracts the bottom number from the top number"""
+    Symbol = TextSymbolCreator("-")
+    input = True
+    output = True
+    input_classes = [InputButton,InputButton]
+
+    def Process(self,number,cycle):
+        number.SetNum(number.num - number.other_num)
+        number.other_num = None
+
+class Multiply(TwoInput):
+    title = "Multiply"
+    short_form = "Mul"
+    help = """Multiplies the two numbers together"""
+    Symbol = TextSymbolCreator("*")
+    input = True
+    output = True
+    input_classes = [InputButton,InputButton]
+
+    def Process(self,number,cycle):
+        number.SetNum(number.num * number.other_num)
+        number.other_num = None
+
+class Divide(TwoInput):
+    title = "Divide"
+    short_form = "Div"
+    help = """Divides the top number by the bottom number"""
+    Symbol = TextSymbolCreator("/")
+    input = True
+    output = True
+    input_classes = [InputButton,InputButton]
+
+    def Process(self,number,cycle):
+        number.SetNum(number.num / number.other_num)
+        number.other_num = None
+
+class XOR(TwoInput):
+    title = "XOR"
+    short_form = title
+    help = """XORs the two numbers together bitwise"""
+    Symbol = TextSymbolCreator("^")
+    input = True
+    output = True
+    input_classes = [InputButton,InputButton]
+
+    def Process(self,number,cycle):
+        number.SetNum(number.num ^ number.other_num)
+        number.other_num = None
+
+class OR(TwoInput):
+    title = "OR"
+    short_form = title
+    help = """ORs the two numbers together bitwise"""
+    Symbol = TextSymbolCreator("|")
+    input = True
+    output = True
+    input_classes = [InputButton,InputButton]
+
+    def Process(self,number,cycle):
+        number.SetNum(number.num | number.other_num)
+        number.other_num = None
+
+
+
 class CodeCreator(ui.HoverableElement):
     def __init__(self,parent,pos,tr,code_class):
         super(CodeCreator,self).__init__(parent,pos,tr)
@@ -826,7 +893,7 @@ class CodeBar(ui.UIElement):
     def __init__(self,parent,bl,tr):
         super(CodeBar,self).__init__(parent,bl,tr)
         self.backdrop = ui.Box(self,Point(0,0),Point(1,1),colour = drawing.constants.colours.white,buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
-        self.max_num = 12
+        self.max_num = 18
         self.button_width = 0.08
         self.spacing = (1.0-self.button_width)/(self.max_num+1)
         self.buttons = []

@@ -119,10 +119,7 @@ class GameView(ui.RootElement):
         super(GameView,self).__init__(Point(0,0),Point(8000,8000))
         self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(80,80))
         self.grid.Disable()
-        #self.box = code.OneSource(self,Point(0.38,0.4),drawing.constants.colours.white)
-        #self.inc = code.Increment(self,Point(0.45,0.41),drawing.constants.colours.white)
-        #self.sink = code.TwoSong(self,Point(0.52,0.39),drawing.constants.colours.white)
-        #self.num = code.Number(self,Point(0.1,0.25),Point(0.22,0.28),40000)
+
         self.ui = ui.UIElement(globals.screen_root,Point(0,0),Point(1,1)) 
         self.timer = ui.Box(self.ui,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.timer.text = ui.TextBox(parent = self.timer,
@@ -211,6 +208,11 @@ class GameView(ui.RootElement):
         self.code_bar = code.CodeBar(self.ui,Point(0.03,0.035),Point(0.7,0.2))
         self.code_bar.AddButton(code.Increment)
         self.code_bar.AddButton(code.Add)
+        self.code_bar.AddButton(code.Sub)
+        self.code_bar.AddButton(code.Multiply)
+        self.code_bar.AddButton(code.Divide)
+        self.code_bar.AddButton(code.XOR)
+        self.code_bar.AddButton(code.OR)
 
         self.code_bar.Enable()
         
