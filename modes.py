@@ -117,10 +117,11 @@ class IntroMode(Mode):
 
     - drag blocks from the bar            - connect inputs to outputs            - watch and listen                    - potato"""
     button_text = 'one'
-    target_level = LevelTwo
+    target_level = LevelOne
     def __init__(self,parent):
         self.parent = parent
         self.parent.UIDisable()
+        self.parent.UnshowHelp()
         if not self.parent.paused:
             self.parent.Play(None) #pause it
         self.level = drawing.constants.DrawLevels.ui + 500
@@ -129,8 +130,8 @@ class IntroMode(Mode):
         self.intro_text = ui.TextBox(self.backdrop,Point(0,0.1),Point(1,0.9),text = self.blurb,scale=12,colour = drawing.constants.colours.white,level = self.level + 1)
         self.play_button = ui.TextBoxButton(parent = self.backdrop,
                                             text = self.button_text,
-                                            pos = Point(0.42,0.1),
-                                            tr = Point(0.58,0.2),
+                                            pos = Point(0.39,0.1),
+                                            tr = Point(0.61,0.2),
                                             colour = drawing.constants.colours.white,
                                             size = 24,
                                             callback = self.Play,
@@ -144,7 +145,7 @@ def quit(self,parent):
     raise SystemExit('bye')
 
 class GameOver(IntroMode):
-    blurb = 'goodbye'
+    blurb = 'Congratulations!'
     button_text = 'zero'
     target_level = quit
                                    
@@ -156,4 +157,8 @@ class LevelTwoIntro(IntroMode):
     def __init__(self,parent,blocks,cycles):
         self.blurb = self.blurb.format(num_symbols = blocks,cycles = cycles)
         super(LevelTwoIntro,self).__init__(parent)
+
+class LevelThreeIntro(LevelTwoIntro):
+    target_level = GameOver
+    
 

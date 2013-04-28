@@ -1028,7 +1028,7 @@ class TextBoxButton(TextBox):
         self.enabled     = False
         self.colour      = colour
         self.extra_level = 0 if level == None else level
-        super(TextBoxButton,self).__init__(parent,pos,tr,text,size,colour = colour,textType = textType,level = level)
+        super(TextBoxButton,self).__init__(parent,pos,tr,text,size,colour = colour,textType = textType,level = level,alignment = drawing.texture.TextAlignments.CENTRE)
         for i in xrange(4):
             self.hover_quads[i].Disable()
         self.registered = False

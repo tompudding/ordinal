@@ -78,6 +78,9 @@ class Connector(ui.HoverableElement):
             return
         for line in itertools.chain(self.border,self.circle_lines,self.arrow):
             line.Delete()
+        for number in self.numbers:
+            number.Kill()
+        self.numbers = set()
         self.connector_line.Delete()
 
     def Reset(self):
@@ -456,6 +459,9 @@ class CodePrimitive(ui.UIElement):
         for i in self.inputs:
             i.UpdateConnectedLineBackwards()
 
+    def NewCycle(self,cycle):
+        pass
+
     def UpdatePosition(self):
         super(CodePrimitive,self).UpdatePosition()
         bottom_left  = self.absolute.bottom_left + Point(-self.line_peturb,-self.line_peturb)
@@ -645,7 +651,7 @@ class Source(CodePrimitive):
         self.gen = self.generator()
         super(Source,self).__init__(*args,**kwargs)
 
-    def Squirt(self,cycle):
+    def NewCycle(self,cycle):
         n = next(self.gen)
         comingup = [next(self.gen) for i in xrange(5)]
         num = Number(self.root,self.root.GetRelative(self.outputs[0].GetAbsolute(Point(0.5,0.5))),n)
@@ -743,7 +749,7 @@ class TwoInput(CodePrimitive):
     def ProcessArrival(self,input,number,cycle):
         slot = self.inputs.index(input)
         if self.slots[slot]:
-            input.numbers.remove(self.slots[slot])
+            #input.numbers.remove(self.slots[slot])
             self.slots[slot].Kill()
             self.slots[slot] = None
         self.slots[slot] = number
@@ -772,6 +778,34 @@ class TwoInput(CodePrimitive):
             number.SetTarget(output,output.next,cycle)
         else:
             number.Kill()
+
+class Interleave(CodePrimitive):
+    """Like a two input, but outputs each slot at a time"""
+    title = "Interleave"
+    short_form = "Int"
+    help = """Outputs the two inputs alternately"""
+    Symbol = TextSymbolCreator("#")
+    input = True
+    output = True
+
+    def ProcessArrival(self,input,number,cycle):
+        slot = self.inputs.index(input)
+        if self.slots[slot]:
+            #input.numbers.remove(self.slots[slot])
+            self.slots[slot].Kill()
+            self.slots[slot] = None
+        self.slots[slot] = number
+        number.start = number.target
+        number.ClearTarget()
+
+    def NewCycle(self,cycle):
+        slot = cycle%len(self.slots)
+        if self.slots[slot]:
+            self.slots[slot].SetTarget(self.inputs[slot],self.outputs[0],cycle)
+            self.slots[slot] = None
+
+class TwoInterleave(Interleave):
+    input_classes = [InputButton,InputButton]
 
 class Add(TwoInput):
     title = "Add"
@@ -917,7 +951,7 @@ class CodeBar(ui.UIElement):
     def __init__(self,parent,bl,tr):
         super(CodeBar,self).__init__(parent,bl,tr)
         self.backdrop = ui.Box(self,Point(0,0),Point(1,1),colour = drawing.constants.colours.white,buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
-        self.max_num = 18
+        self.max_num = 24
         self.button_width = 0.08
         self.spacing = (1.0-self.button_width)/(self.max_num+1)
         self.buttons = []

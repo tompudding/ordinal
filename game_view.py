@@ -213,6 +213,7 @@ class GameView(ui.RootElement):
         self.code_bar.AddButton(code.Divide)
         self.code_bar.AddButton(code.XOR)
         self.code_bar.AddButton(code.OR)
+        self.code_bar.AddButton(code.TwoInterleave)
 
         self.code_bar.Enable()
         
@@ -246,6 +247,7 @@ class GameView(ui.RootElement):
 
     def UIDisable(self):
         self.ui.Disable()
+        self.UnshowHelp()
 
     def Reset(self):
         self.Stop(None)
@@ -323,8 +325,8 @@ class GameView(ui.RootElement):
         return True if self.dragging else False
 
     def NewCycle(self,cycle):
-        for source in self.sources:
-            source.Squirt(cycle)
+        for block in self.blocks:
+            block.NewCycle(cycle)
 
     def AddNumber(self,number):
         self.numbers.add(number)
