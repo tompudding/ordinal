@@ -22,7 +22,7 @@ class ShapeBuffer(object):
             self.indices[i] = i
         self.current_size = 0
         self.max_size     = size*self.num_points
-        self.vacant = []
+        self.vacant = set()
 
     def next(self):
         """
@@ -65,7 +65,7 @@ class ShapeBuffer(object):
         of the number of quads we're going to be asking the graphics card to draw, but because the game is so simple I'm 
         hoping it won't ever be an issue
         """
-        self.vacant.append(index)
+        self.vacant.add(index)
         for i in xrange(self.num_points):
             self.indices[index+i] = 0
             for j in xrange(3):

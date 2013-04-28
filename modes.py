@@ -120,7 +120,7 @@ class LevelThree(GameMode):
         self.parent.Stop(None)
         self.parent.Reset()
         self.parent.UIDisable()
-        self.parent.mode = LevelThreeIntro(self.parent,blocks,cycles)
+        self.parent.mode = LevelFourIntro(self.parent,blocks,cycles)
 
 
 class IntroMode(Mode):
@@ -177,3 +177,8 @@ class LevelThreeIntro(LevelTwoIntro):
     button_text = 'three'
     
 
+class LevelFourIntro(LevelTwoIntro):
+    blurb = 'You used {num_symbols} code blocks and took {cycles} cycles.'
+    target_level = GameOver
+    button_text = 'three'
+    
