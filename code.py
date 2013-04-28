@@ -717,8 +717,12 @@ class Sink(CodePrimitive):
         self.matched = 0
         super(Sink,self).__init__(*args,**kwargs)
 
+    def Matched(self,item):
+        pass
+
     def Process(self,number,cycle):
         if number.num == self.sequence[self.matched]:
+            self.Matched(self.matched)
             self.matched += 1
             if self.matched == len(self.sequence):
                 #play correct noise
@@ -728,6 +732,7 @@ class Sink(CodePrimitive):
                 self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
         else:
             #play bad noise
+            globals.sounds.bad.play()
             print 'bad note!',number.num,self.sequence[self.matched:]
             self.matched = 0
             if self.root.HelpShowing():
@@ -744,9 +749,16 @@ class Sink(CodePrimitive):
 
 class TwoSong(Sink):
     sequence = [2,2,2,2]
+    def Matched(self,item):
+        globals.sounds.sweet.play()
 
 class AlternateSong(Sink):
     sequence = [2,7,2,7,2,7]
+    def Matched(self,item):
+        if (item&1) == 0:
+            globals.sounds.kick.play()
+        else:
+            globals.sounds.snare.play()
 
 class Increment(CodePrimitive):
     title  = "Increment"
