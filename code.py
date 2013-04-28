@@ -121,21 +121,25 @@ class SourceOutputButton(OutputButton):
     def Hover(self):
         #This can happen quite a lot, and I think I'm generating a large nested itertools object when that happens
         #oh well
+        super(SourceOutputButton,self).Hover()
         comingup = [next(self.parent.gen) for i in xrange(5)]
         self.parent.gen = itertools.chain(comingup, self.parent.gen)
         self.root.SetHelpText(self.message + ' '.join('%d' % v for v in comingup))
         
     def EndHover(self):
+        super(SourceOutputButton,self).EndHover()
         self.root.UnshowHelp()
 
 
-class SinkInputButton(OutputButton):
+class SinkInputButton(InputButton):
     message = "This sink expects the following numbers "
 
     def Hover(self):
+        super(SinkInputButton,self).Hover()
         self.root.SetHelpText(self.message + ' '.join('%d' % v for v in self.parent.sequence))
         
     def EndHover(self):
+        super(SinkInputButton,self).EndHover()
         self.root.UnshowHelp()
 
 number_id = 0
@@ -579,9 +583,43 @@ class TwoSong(Sink):
 
 class Increment(CodePrimitive):
     title  = "Increment"
+    short_form = 'INC'
     Symbol = TextSymbolCreator("+1")
     input  = True
     output = True
 
     def Process(self,number,cycle):
         number.SetNum(number.num + 1)
+
+class CodeCreator(ui.HoverableElement):
+    def __init__(self,parent,pos,tr,code_class):
+        super(CodeCreator,self).__init__(parent,pos,tr)
+        self.code_class = code_class
+        self.backdrop = ui.Box(self,Point(0,0.3),Point(1,1),colour = drawing.constants.colours.dark_grey,buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.title = ui.TextBox(parent = self,
+                                bl = Point(0,0),
+                                tr = Point(1,0.3),
+                                text = code_class.short_form,
+                                scale = 6,
+                                colour = drawing.constants.colours.black,
+                                textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                alignment = drawing.texture.TextAlignments.CENTRE,
+                                level = drawing.constants.DrawLevels.ui+1000)
+    
+
+class CodeBar(ui.UIElement):
+    def __init__(self,parent,bl,tr):
+        super(CodeBar,self).__init__(parent,bl,tr)
+        self.backdrop = ui.Box(self,Point(0,0),Point(1,1),colour = drawing.constants.colours.white,buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.max_num = 12
+        self.button_width = 0.08
+        self.spacing = (1.0-self.button_width)/(self.max_num+1)
+        self.buttons = []
+
+    def AddButton(self,code_class):
+        startx = ((self.spacing+self.button_width)*len(self.buttons)) + self.spacing
+        endx   = startx + self.button_width
+        new_button = CodeCreator(self,Point(startx,0),Point(endx,0.75),code_class)
+        self.buttons.append(code_class)
+        
+        

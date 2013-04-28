@@ -418,17 +418,17 @@ class Box(UIElement):
         self.colour = colour
         self.unselectable_colour = tuple(component*0.6 for component in self.colour)
         self.quad.SetColour(self.colour)
-        self.true_level = level
+        self.extra_level = 0 if level == None else level
         self.quad.SetVertices(self.absolute.bottom_left,
                               self.absolute.top_right,
-                              self.level if self.true_level == None else self.true_level)
+                              self.level + self.extra_level)
         self.Enable()
 
     def UpdatePosition(self):
         super(Box,self).UpdatePosition()
         self.quad.SetVertices(self.absolute.bottom_left,
                               self.absolute.top_right,
-                              self.level if self.true_level == None else self.true_level)
+                              self.level + self.extra_level)
 
     def Delete(self):
         super(Box,self).Delete()

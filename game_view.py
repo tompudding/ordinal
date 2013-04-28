@@ -207,7 +207,8 @@ class GameView(ui.RootElement):
         self.time_controls.Enable()
         self.time_controls.paused_text.Disable()
 
-        self.code_bar = ui.Box(globals.screen_root,Point(0.03,0.035),Point(0.7,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.code_bar = code.CodeBar(globals.screen_root,Point(0.03,0.035),Point(0.7,0.2))
+        self.code_bar.AddButton(code.Increment)
 
 
         self.code_bar.Enable()
