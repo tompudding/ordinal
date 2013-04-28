@@ -135,6 +135,25 @@ class GameView(ui.RootElement):
         self.time_controls = ui.Box(globals.screen_root,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer)
         self.speed_points = [(v/1000.0,i) for i,v in enumerate((0,0.25,1,2,4,8))]
         self.speed = 0.25/1000.0
+        self.mouse_text           = ui.TextBox(parent   = globals.screen_root,
+                                               bl       = Point(0.005,0.005)  ,
+                                               tr       = None                ,
+                                               text     = ' '                 ,
+                                               scale    = 8                   ,
+                                               textType = drawing.texture.TextTypes.MOUSE_RELATIVE)
+
+        self.mouse_text_colour    = (1,1,1,1)
+        self.help = ui.Box(globals.screen_root,Point(0.05,0.6),Point(0.40,0.95),colour = drawing.constants.colours.dark_grey,buffer = globals.ui_buffer)
+        self.help.titlebar = ui.HelpBar(self.help,Point(0,0.9),Point(1,1),'Help (h to close)',colour = None,buffer=globals.ui_buffer)
+        self.help.text = ui.TextBox(parent = self.help,
+                                    bl     = Point(0,0),
+                                    tr     = Point(1,0.8),
+                                    text   = ' '*10,
+                                    scale  = 6,
+                                    colour = drawing.constants.colours.white,
+                                    textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                    alignment = drawing.texture.TextAlignments.LEFT)
+        self.help.Disable()
 
         self.time_controls.slider = ui.Slider(self.time_controls,
                                               bl = Point(0.05,0.5),
@@ -200,6 +219,9 @@ class GameView(ui.RootElement):
         self.last_timer_update = 0
         self.paused  = False
         self.stopped = False
+        self.mouse_pos = Point(0,0)
+        self.help_enabled = True
+        self.help_showing = False
 
     def Stop(self,pos):
         """Reset the cycle count to zero, reset the sinks and the sources, and delete all the numbers on the board"""
@@ -217,6 +239,7 @@ class GameView(ui.RootElement):
         self.last_cycle = 0
         self.stopped = True
         self.paused  = False
+        
 
     def Play(self,pos):
         if self.stopped:
@@ -247,6 +270,18 @@ class GameView(ui.RootElement):
         #pygame.mixer.music.play(-1)
         #self.music_playing = True
 
+    def SetHelpText(self,text):
+        self.help.text.SetText(text,colour = drawing.constants.colours.white)
+        self.help_showing = True
+        if self.help_enabled:
+            self.help.Enable()
+        else:
+            self.help.Disable()
+
+    def UnshowHelp(self):
+        self.help.Disable()
+        self.help_showing = False
+
     def IsDragging(self):
         return True if self.dragging else False
 
@@ -268,6 +303,9 @@ class GameView(ui.RootElement):
         drawing.DrawNoTexture(globals.line_buffer)
         drawing.DrawNoTexture(globals.colour_tiles)
         drawing.DrawAll(globals.nonstatic_text_buffer,globals.text_manager.atlas.texture.texture)
+        drawing.ResetState()
+        drawing.Translate(self.mouse_pos.x,self.mouse_pos.y,10)
+        drawing.DrawAll(globals.mouse_relative_buffer,globals.text_manager.atlas.texture.texture)
 
     def EnableGrid(self):
         self.grid.Enable()
@@ -321,6 +359,15 @@ class GameView(ui.RootElement):
                 pygame.mixer.music.set_volume(1)
         if key == pygame.K_SPACE:
             self.Play(None)
+        if key == pygame.K_h:
+            if self.help_enabled:
+                self.help_enabled = False
+                if self.help_showing:
+                    self.help.Disable()
+            else:
+                self.help_enabled = True
+                if self.help_showing:
+                    self.help.Enable()
         self.mode.KeyUp(key)
 
     def MouseButtonDown(self,pos,button):
@@ -369,7 +416,7 @@ class GameView(ui.RootElement):
     def MouseMotion(self,pos,rel,handled):
         screen_pos = self.viewpos.Get() + (pos/self.zoom)
         screen_rel = rel/self.zoom
-        self.mouse_pos = screen_pos
+        self.mouse_pos = pos
         if self.active_connector:
             self.active_connector.MouseMotion(screen_pos,screen_rel,handled)
         handled = super(GameView,self).MouseMotion(screen_pos,screen_rel,handled)

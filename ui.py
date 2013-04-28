@@ -569,6 +569,19 @@ class NumberBar(Box):
                              alignment = drawing.texture.TextAlignments.LEFT)
         self.title.Enable()
 
+class HelpBar(Box):
+    def __init__(self,parent,bl,tr,title,colour,buffer):
+        super(HelpBar,self).__init__(parent,bl,tr,drawing.constants.colours.white,buffer)
+        self.title = TextBox(parent = self,
+                             bl     = Point(0,0),
+                             tr     = Point(1,0.95),
+                             text   = title,
+                             scale  = 8,
+                             colour = drawing.constants.colours.black,
+                             textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                             alignment = drawing.texture.TextAlignments.LEFT)
+        self.title.Enable()
+
 
 class TitleBar(HoverableBox):
     def __init__(self,parent,bl,tr,title,colour,buffer):

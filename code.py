@@ -3,6 +3,7 @@ from globals.types import Point
 import bisect
 import ui
 import math
+import itertools
 
 twopi = math.pi*2
 
@@ -116,6 +117,28 @@ class OutputButton(Connector):
         if self.connecting:
             self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),pos,drawing.constants.DrawLevels.ui)
             self.connector_line.SetColour(drawing.constants.colours.red)
+
+class SourceOutputButton(OutputButton):
+    message = "The next numbers from this output will be "
+    def Hover(self):
+        #This can happen quite a lot, and I think I'm generating a large nested itertools object when that happens
+        #oh well
+        comingup = [next(self.parent.gen) for i in xrange(5)]
+        self.parent.gen = itertools.chain(comingup, self.parent.gen)
+        self.root.SetHelpText(self.message + ' '.join('%d' % v for v in comingup))
+        
+    def EndHover(self):
+        self.root.UnshowHelp()
+
+
+class SinkInputButton(OutputButton):
+    message = "This sink expects the following numbers "
+
+    def Hover(self):
+        self.root.SetHelpText(self.message + ' '.join('%d' % v for v in self.parent.sequence))
+        
+    def EndHover(self):
+        self.root.UnshowHelp()
 
 number_id = 0
           
@@ -256,7 +279,9 @@ class Number(ui.UIElement):
 
 
 class CodePrimitive(ui.UIElement):
-    line_peturb = 0.5
+    line_peturb  = 0.5
+    input_class  = InputButton
+    output_class = OutputButton
     def __init__(self,parent,pos,tr,colour):
         self.colour = colour
         self.next = None
@@ -269,12 +294,12 @@ class CodePrimitive(ui.UIElement):
         self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
         self.connectors = []
         if self.input:
-            self.input = InputButton(self,Point(0,0.4),Point(0.2,0.6)) 
+            self.input = self.input_class(self,Point(0,0.4),Point(0.2,0.6)) 
             self.connectors.append( self.input )
         else:
             self.input = ui.UIElement(self,Point(0,0.4),Point(0.2,0.6)) 
         if self.output:
-            self.output = OutputButton(self,Point(0.8,0.4),Point(1.0,0.6)) 
+            self.output = self.output_class(self,Point(0.8,0.4),Point(1.0,0.6)) 
             self.connectors.append( self.output )
         else:
             self.output = ui.UIElement(self,Point(0.8,0.4),Point(1.0,0.6))
@@ -492,6 +517,7 @@ class Source(CodePrimitive):
     Symbol = SourceSymbol
     input  = False
     output = True
+    output_class = SourceOutputButton
 
     def __init__(self,*args,**kwargs):
         self.gen = self.generator()
@@ -517,6 +543,7 @@ class Sink(CodePrimitive):
     Symbol = SinkSymbol
     input  = True
     output = False
+    input_class = SinkInputButton
 
     def __init__(self,*args,**kwargs):
         self.matched = 0
