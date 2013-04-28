@@ -748,9 +748,9 @@ class Sink(CodePrimitive):
 
 
 class TwoSong(Sink):
-    sequence = [2,2,2,2]
+    sequence = [2]*12
     def Matched(self,item):
-        globals.sounds.sweet.play()
+        globals.sounds.sawsong[item%len(globals.sounds.sawsong)].play()
 
 class Two2Song(Sink):
     sequence = [2,2,2,2,2]
@@ -759,12 +759,9 @@ class Two2Song(Sink):
 
 
 class AlternateSong(Sink):
-    sequence = [2,7,2,7,2,7]
+    sequence = [2,7]*6
     def Matched(self,item):
-        if (item&1) == 0:
-            globals.sounds.kick.play()
-        else:
-            globals.sounds.snare.play()
+        globals.sounds.sawsong1[item%len(globals.sounds.sawsong)].play()
 
 class Increment(CodePrimitive):
     title  = "Increment"
