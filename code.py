@@ -47,11 +47,7 @@ class Connector(ui.HoverableElement):
         
     def SetColour(self,colour):
         self.colour = colour
-        for line in self.circle_lines:
-            line.SetColour(self.colour)
-        for line in self.border:
-            line.SetColour(self.colour)
-        for line in self.arrow:
+        for line in itertools.chain(self.border,self.circle_lines,self.arrow):
             line.SetColour(self.colour)
 
     def Hover(self):
@@ -61,6 +57,27 @@ class Connector(ui.HoverableElement):
     def EndHover(self):
         for line in self.border:
             line.SetColour(self.colour)
+
+    def Delete(self):
+        super(Connector,self).Delete()
+        for line in itertools.chain(self.border,self.circle_lines,self.arrow):
+            line.Delete()
+        self.connector_line.Delete()
+        
+    def Disable(self):
+        if self.enabled:
+            for line in itertools.chain(self.border,self.circle_lines,self.arrow):
+                lines.Disable()
+            self.connector_line.Disable()
+        super(Connector,self).Disable()
+
+    def Enable(self):
+        if not self.enabled:
+            for line in itertools.chain(self.border,self.circle_lines,self.arrow):
+                line.Enable()
+            self.connector_line.Enable()
+        super(Connector,self).Enable()
+
 
 class InputButton(Connector):
     arrow_offset = Point(0,0)
@@ -366,8 +383,7 @@ class CodePrimitive(ui.UIElement):
         super(CodePrimitive,self).Delete()
         for line in self.border:
             line.Delete()
-        for item in self.symbol:
-            item.Delete()
+        self.symbol.Delete()
         
     def Disable(self):
         if self.enabled:
@@ -608,18 +624,43 @@ class CodeCreator(ui.HoverableElement):
                                 alignment = drawing.texture.TextAlignments.CENTRE,
                                 level = drawing.constants.DrawLevels.ui+1000)
         self.dragging = None
+        self.last_opacity = 1
 
     def Depress(self,pos):
-        #new_code = self.code_class(
-        self.dragging = pos
+        create_pos = globals.current_view.GetScreen(pos)
+        new_code = self.code_class(globals.current_view,globals.current_view.GetRelative(create_pos),drawing.constants.colours.white)
+        new_code.level_bonus = 100
+        self.last_opacity = 1
+        print create_pos,new_code.absolute.bottom_left
+        self.dragging = (create_pos,new_code)
         return self
 
     def Undepress(self):
+        if self.dragging:
+            pos,new_code = self.dragging
+            if globals.current_view.CollidesAny(new_code,include_parent = False):
+                new_code.Delete()
+            else:
+                new_code.level_bonus = 0
+                new_code.UpdatePosition()
         self.dragging = None
 
     def MouseMotion(self,pos,rel,handled):
         if self.dragging != None:
-            print 'jim',self.dragging,pos
+            dragging,new_code = self.dragging
+            if globals.current_view.CollidesAny(new_code,include_parent = False):
+                if self.last_opacity != 0:
+                    new_code.SetOpacity(0.6)
+                    self.last_opacity = 0
+            else:
+                if self.last_opacity != 1:
+                    new_code.SetOpacity(1)
+                    self.last_opacity = 1
+            pos = globals.current_view.GetScreen(pos)
+            
+            new_code.SetPosAbsolute(new_code.absolute.bottom_left + (pos - dragging))
+            print 'jim',pos,dragging,new_code.absolute.bottom_left
+            self.dragging = (pos,new_code)
 
     def Hover(self):
         super(CodeCreator,self).Hover()
@@ -628,8 +669,6 @@ class CodeCreator(ui.HoverableElement):
     def EndHover(self):
         super(CodeCreator,self).EndHover()
         globals.current_view.UnshowHelp()
-        
-    
 
 class CodeBar(ui.UIElement):
     def __init__(self,parent,bl,tr):

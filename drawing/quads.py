@@ -68,6 +68,8 @@ class ShapeBuffer(object):
         self.vacant.append(index)
         for i in xrange(self.num_points):
             self.indices[index+i] = 0
+            for j in xrange(3):
+                self.vertex_data[index+i][j] = 0
 
 class QuadBuffer(ShapeBuffer):
     num_points = 4

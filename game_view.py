@@ -382,6 +382,9 @@ class GameView(ui.RootElement):
                     self.help.Enable()
         self.mode.KeyUp(key)
 
+    def GetScreen(self,pos):
+        return self.viewpos.Get() + (pos/self.zoom)
+
     def MouseButtonDown(self,pos,button):
         screen_pos = self.viewpos.Get() + (pos/self.zoom)
         if self.active_connector:
