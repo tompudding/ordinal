@@ -101,14 +101,12 @@ class OutputButton(Connector):
                 #did they click on something
                 hover = self.root.hovered
                 if isinstance(hover,InputButton) and hover.parent.prev == None:
-                    print 'a'
                     self.parent.next = hover.parent
                     self.parent.next.prev = self.parent
                     self.connecting = False
                     self.parent.UpdateConnectedLineForward()
                     self.root.active_connector = None
                 else:
-                    print 'b'
                     self.connecting = False
                     self.connector_line.Disable()
                     self.root.active_connector = None
@@ -277,6 +275,10 @@ class Number(ui.UIElement):
     def Passable(self):
         return True
 
+    def Kill(self):
+        self.Delete()
+        self.root.RemoveNumber(self)
+
 
 class CodePrimitive(ui.UIElement):
     line_peturb  = 0.5
@@ -315,12 +317,19 @@ class CodePrimitive(ui.UIElement):
         if self.next:
             self.next.prev = None
             self.next = None
+            #kill any numbers that are on our line and haven't reached their target yet
+            new_numbers = set()
+            for number in self.numbers:
+                if number.target is not self:
+                    number.Kill()
+                else:
+                    new_numbers.add(number)
+            self.numbers = new_numbers
 
     def BreakBackwardLink(self):
         if self.prev:
-            self.prev.next = None
             self.prev.output.connector_line.Disable()
-            self.prev = None
+            self.prev.BreakForwardLink()
 
     def UpdateConnectedLineForward(self):
         if self.next:
@@ -385,8 +394,7 @@ class CodePrimitive(ui.UIElement):
         if self.next:
             number.SetTarget(self,self.next,cycle)
         else:
-            number.Delete()
-            self.parent.RemoveNumber(number)
+            number.Kill()
 
     def Process(self,number,cycle):
         pass
