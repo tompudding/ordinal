@@ -203,8 +203,9 @@ class UIElement(object):
 
     def Delete(self):
         self.Disable()
-        for child in self.children:
+        for child in self.children[::]:
             child.Delete()
+        self.parent.RemoveChild(self)
 
     def MakeSelectable(self):
         self.on = True
@@ -592,12 +593,20 @@ class TitleBar(HoverableBox):
         super(TitleBar,self).__init__(parent,bl,tr,colour,buffer)
         self.title = TextBox(parent = self,
                              bl     = Point(0,0),
-                             tr     = Point(1,1),
+                             tr     = Point(0.9,1),
                              text   = title,
                              scale  = 8,
                              colour = drawing.constants.colours.black,
                              textType = drawing.texture.TextTypes.GRID_RELATIVE,
                              alignment = drawing.texture.TextAlignments.LEFT)
+        self.close = TextBoxButton(parent = self,
+                                   pos = Point(0.9,0),
+                                   tr = Point(1,1),
+                                   text = 'X',
+                                   size = 8,
+                                   colour = drawing.constants.colours.black,
+                                   textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                                   callback = self.parent.DeleteCallback)
         self.title.Enable()
 
     def Depress(self,pos):
@@ -775,7 +784,8 @@ class TextBox(UIElement):
     def SetText(self,text,colour = None):
         """Update the text"""
         enabled = self.enabled
-        self.Delete()
+        for quad in self.quads:
+            quad.Delete()
         if enabled:
             self.Enable()
         self.text = text
@@ -1009,7 +1019,7 @@ class ScrollTextBox(TextBox):
             #self.UpdatePosition()
 
 class TextBoxButton(TextBox):
-    def __init__(self,parent,text,pos,tr=None,size=0.5,callback = None,line_width=2,colour=None,level = None):
+    def __init__(self,parent,text,pos,tr=None,size=0.5,callback = None,textType = drawing.texture.TextTypes.SCREEN_RELATIVE,line_width=2,colour=None,level = None):
         self.callback    = callback
         self.line_width  = line_width
         self.hovered     = False
@@ -1018,7 +1028,7 @@ class TextBoxButton(TextBox):
         self.enabled     = False
         self.colour      = colour
         self.extra_level = 0 if level == None else level
-        super(TextBoxButton,self).__init__(parent,pos,tr,text,size,colour = colour,level = level)
+        super(TextBoxButton,self).__init__(parent,pos,tr,text,size,colour = colour,textType = textType,level = level)
         for i in xrange(4):
             self.hover_quads[i].Disable()
         self.registered = False

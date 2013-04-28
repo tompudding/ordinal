@@ -67,7 +67,7 @@ class Connector(ui.HoverableElement):
     def Disable(self):
         if self.enabled:
             for line in itertools.chain(self.border,self.circle_lines,self.arrow):
-                lines.Disable()
+                line.Disable()
             self.connector_line.Disable()
         super(Connector,self).Disable()
 
@@ -132,6 +132,13 @@ class OutputButton(Connector):
         if self.connecting:
             self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),pos,drawing.constants.DrawLevels.ui)
             self.connector_line.SetColour(drawing.constants.colours.red)
+
+    def Delete(self):
+        super(OutputButton,self).Delete()
+
+    def Disable(self):
+        super(OutputButton,self).Disable()
+        
 
 class SourceOutputButton(OutputButton):
     message = "The next numbers from this output will be "
@@ -335,6 +342,9 @@ class CodePrimitive(ui.UIElement):
     def Reset(self):
         self.numbers = set()
 
+    def DeleteCallback(self,pos):
+        self.Delete()
+
     def BreakForwardLink(self):
         if self.next:
             self.next.prev = None
@@ -381,6 +391,10 @@ class CodePrimitive(ui.UIElement):
 
     def Delete(self):
         super(CodePrimitive,self).Delete()
+        self.BreakForwardLink()
+        self.BreakBackwardLink()
+        for number in self.numbers:
+            number.Kill()
         for line in self.border:
             line.Delete()
         self.symbol.Delete()
@@ -388,7 +402,7 @@ class CodePrimitive(ui.UIElement):
     def Disable(self):
         if self.enabled:
             for line in self.border:
-                lines.Disable()
+                line.Disable()
         super(CodePrimitive,self).Disable()
 
     def Enable(self):
@@ -562,6 +576,11 @@ class Source(CodePrimitive):
         super(Source,self).Reset()
         self.gen = self.generator()
 
+    def DeleteCallback(self,pos):
+        #you can't delete sources
+        pass
+
+
 class OneSource(Source):
     def generator(self):
         while True:
@@ -581,7 +600,6 @@ class Sink(CodePrimitive):
     def Process(self,number,cycle):
         if number.num == self.sequence[self.matched]:
             self.matched += 1
-            print 'matched',self.matched
             if self.matched == len(self.sequence):
                 #play correct noise
                 print 'finished level!'
@@ -594,6 +612,11 @@ class Sink(CodePrimitive):
     def Reset(self):
         super(Sink,self).Reset()
         self.matched = 0
+
+    def DeleteCallback(self,pos):
+        #you can't delete sinks
+        pass
+
 
 class TwoSong(Sink):
     sequence = [2,2,2,2]
@@ -631,7 +654,6 @@ class CodeCreator(ui.HoverableElement):
         new_code = self.code_class(globals.current_view,globals.current_view.GetRelative(create_pos),drawing.constants.colours.white)
         new_code.level_bonus = 100
         self.last_opacity = 1
-        print create_pos,new_code.absolute.bottom_left
         self.dragging = (create_pos,new_code)
         return self
 
@@ -659,7 +681,6 @@ class CodeCreator(ui.HoverableElement):
             pos = globals.current_view.GetScreen(pos)
             
             new_code.SetPosAbsolute(new_code.absolute.bottom_left + (pos - dragging))
-            print 'jim',pos,dragging,new_code.absolute.bottom_left
             self.dragging = (pos,new_code)
 
     def Hover(self):

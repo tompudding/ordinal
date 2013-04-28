@@ -110,7 +110,7 @@ class Viewpos(object):
 
 
 class GameView(ui.RootElement):
-    timer_update_duration = 0.01
+    timer_update_duration = 0.1
     def __init__(self):
         self.atlas = globals.atlas = drawing.texture.TextureAtlas('tiles_atlas_0.png','tiles_atlas.txt')
         self.game_over = False
