@@ -210,7 +210,7 @@ class GameView(ui.RootElement):
 
         self.code_bar = code.CodeBar(self.ui,Point(0.03,0.035),Point(0.7,0.2))
         self.code_bar.AddButton(code.Increment)
-
+        self.code_bar.AddButton(code.Add)
 
         self.code_bar.Enable()
         

@@ -8,6 +8,7 @@ import itertools
 twopi = math.pi*2
 
 class Connector(ui.HoverableElement):
+    visible = True
     def __init__(self,parent,bl,tr):
         self.dragging = None
         self.prev = None
@@ -16,22 +17,25 @@ class Connector(ui.HoverableElement):
         self.colour = drawing.constants.colours.white
         self.highlight_colour = drawing.constants.colours.red
         super(Connector,self).__init__(parent,bl,tr)
-        self.circle_segments = 8
-        self.circle_lines = [drawing.Line(globals.line_buffer) for i in xrange(self.circle_segments)]
-        self.border = [drawing.Line(globals.line_buffer) for i in xrange(4)]
-        self.arrow  = [drawing.Line(globals.line_buffer) for i in xrange(3)]
-        self.connector_line = drawing.Line(globals.line_buffer)
-        self.points = []
-        self.connecting = False
-        for i in xrange(self.circle_segments):
-            angle = (float(i)/self.circle_segments)*twopi
-            self.points.append(Point( math.cos(angle)*0.25 + 0.5,math.sin(angle)*0.25 + 0.5))
+        if self.visible:
+            self.circle_segments = 8
+            self.circle_lines = [drawing.Line(globals.line_buffer) for i in xrange(self.circle_segments)]
+            self.border = [drawing.Line(globals.line_buffer) for i in xrange(4)]
+            self.arrow  = [drawing.Line(globals.line_buffer) for i in xrange(3)]
+            self.connector_line = drawing.Line(globals.line_buffer)
+            self.points = []
+            self.connecting = False
+            for i in xrange(self.circle_segments):
+                angle = (float(i)/self.circle_segments)*twopi
+                self.points.append(Point( math.cos(angle)*0.25 + 0.5,math.sin(angle)*0.25 + 0.5))
         self.UpdatePosition()
         self.SetColour(self.colour)
         self.prev = self.next = None
 
     def UpdatePosition(self):
         super(Connector,self).UpdatePosition()
+        if not self.visible:
+            return
         for i in xrange(len(self.points)):
             self.circle_lines[i].SetVertices(self.GetAbsolute(self.points[i]),self.GetAbsolute(self.points[(i+1)%len(self.points)]),self.level+0.5)
         bottom_left  = self.absolute.bottom_left 
@@ -50,19 +54,27 @@ class Connector(ui.HoverableElement):
         
     def SetColour(self,colour):
         self.colour = colour
+        if not self.visible:
+            return
         for line in itertools.chain(self.border,self.circle_lines,self.arrow):
             line.SetColour(self.colour)
 
     def Hover(self):
+        if not self.visible:
+            return
         for line in self.border:
             line.SetColour(self.highlight_colour)
 
     def EndHover(self):
+        if not self.visible:
+            return
         for line in self.border:
             line.SetColour(self.colour)
 
     def Delete(self):
         super(Connector,self).Delete()
+        if not self.visible:
+            return
         for line in itertools.chain(self.border,self.circle_lines,self.arrow):
             line.Delete()
         self.connector_line.Delete()
@@ -71,14 +83,14 @@ class Connector(ui.HoverableElement):
         self.numbers = set()
         
     def Disable(self):
-        if self.enabled:
+        if self.enabled and self.visible:
             for line in itertools.chain(self.border,self.circle_lines,self.arrow):
                 line.Disable()
             self.connector_line.Disable()
         super(Connector,self).Disable()
 
     def Enable(self):
-        if not self.enabled:
+        if not self.enabled and self.visible:
             for line in itertools.chain(self.border,self.circle_lines,self.arrow):
                 line.Enable()
             self.connector_line.Enable()
@@ -90,15 +102,17 @@ class Connector(ui.HoverableElement):
         self.numbers.add(number)
 
     def UpdateConnectedLineForward(self):
-        if self.next:
+        if self.next and self.visible:
             #we own the line pointing to the next guy
             self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),self.next.GetAbsolute(Point(0.5,0.5)),drawing.constants.DrawLevels.ui)
         for number in self.numbers:
             number.UpdateEnds()
             
     def UpdateConnectedLineBackwards(self):
-        if self.prev:
+        if self.prev and self.visible:
             self.prev.UpdateConnectedLineForward()
+        for number in self.numbers:
+            number.UpdateEnds()
 
     def BreakForwardLink(self):
         pass
@@ -218,14 +232,22 @@ class SinkInputButton(InputButton):
         self.root.UnshowHelp()
 
 class SourceInputButton(InputButton):
+    visible = False
     def __init__(self,*args,**kwargs):
         super(SourceInputButton,self).__init__(*args,**kwargs)
         self.Disable()
 
+    def Enable(self):
+        pass
+
 class SinkOutputButton(OutputButton):
+    visible = False
     def __init__(self,*args,**kwargs):
         super(SinkOutputButton,self).__init__(*args,**kwargs)
         self.Disable()
+
+    def Enable(self):
+        pass
 
 
 number_id = 0
@@ -246,6 +268,7 @@ class Number(ui.UIElement):
         self.start = None
         self.launch_time = None
         self.arrival_time = None
+        self.other_num = None
         #we want the title bar to be 22 pixels high
         target_height = 22
         title_bottom = 1-(22.0/self.absolute.size.y)
@@ -288,7 +311,13 @@ class Number(ui.UIElement):
     def __hash__(self):
         return self.id
 
+    def ClearTarget(self):
+        self.target = None
+
     def Update(self,t):
+        if not self.target:
+            #not moving
+            return
         if t < self.launch_time:
             #shouldn't even be alive!
             return
@@ -329,14 +358,20 @@ class Number(ui.UIElement):
         
 
     def UpdateEnds(self):
-        if self.target is self.start:
-            #we're progressing across a primitive
-            self.start_pos    = self.start.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
-            self.end_pos      = self.target.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
+        if self.target:
+            if self.target is self.start:
+                #we're progressing across a primitive
+                self.start_pos    = self.start.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
+                self.end_pos      = self.target.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
+            else:
+                self.start_pos    = self.start.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
+                self.end_pos      = self.target.root.GetRelative(self.target.GetAbsolute(Point(0.5,0.5)))
+            self.vector       = self.end_pos - self.start_pos
         else:
             self.start_pos    = self.start.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
-            self.end_pos      = self.target.root.GetRelative(self.target.GetAbsolute(Point(0.5,0.5)))
-        self.vector       = self.end_pos - self.start_pos
+            self.bottom_left = self.start_pos
+            self.top_right = self.bottom_left + self.size
+            self.UpdatePosition()
 
     def SetNum(self,num):
         self.num = num&0xffff
@@ -381,13 +416,21 @@ class CodePrimitive(ui.UIElement):
         self.content = ui.Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.dark_grey,buffer = globals.colour_tiles)
         self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
         if self.input:
-            self.inputs = [ic(self,Point(0,0.4),Point(0.2,0.6)) for ic in self.input_classes]
+            button_height = 0.2
+            num = len(self.input_classes)
+            spacing = (1 - button_height*num)/(num+1)
+            self.inputs = []
+            for i,ic in enumerate(self.input_classes):
+                top = 1 - (spacing+button_height)*i - spacing
+                bottom = top - button_height
+                self.inputs.append(ic(self,Point(0,bottom),Point(0.2,top)))
         else:
             self.inputs = [SourceInputButton(self,Point(0,0.4),Point(0.2,0.6))]
         if self.output:
             self.outputs = [oc(self,Point(0.8,0.4),Point(1.0,0.6)) for oc in self.output_classes]
         else:
             self.outputs = [SinkOutputButton(self,Point(0.8,0.4),Point(1.0,0.6))]
+        self.slots = [None for i in self.inputs]
 
         self.UpdatePosition()
         self.SetColour(self.colour)
@@ -405,14 +448,10 @@ class CodePrimitive(ui.UIElement):
         self.Delete()
 
     def UpdateConnectedLineForward(self):
-        if not self.output:
-            return
         for o in self.outputs:
             o.UpdateConnectedLineForward()
             
     def UpdateConnectedLineBackwards(self):
-        if not self.input:
-            return
         for i in self.inputs:
             i.UpdateConnectedLineBackwards()
 
@@ -670,6 +709,58 @@ class Increment(CodePrimitive):
 
     def Process(self,number,cycle):
         number.SetNum(number.num + 1)
+
+class TwoInput(CodePrimitive):
+    """
+    Two input blocks hold inputs until both entries are full. If another input arrives
+    while an entry is waiting it is deleted
+    """
+
+    def ProcessArrival(self,input,number,cycle):
+        slot = self.inputs.index(input)
+        if self.slots[slot]:
+            input.numbers.remove(self.slots[slot])
+            self.slots[slot].Kill()
+            self.slots[slot] = None
+        self.slots[slot] = number
+        number.start = number.target
+        number.ClearTarget()
+        if all(self.slots):
+            #we're ready to progress
+            for i in 0,1:
+                self.slots[i].SetTarget(self.inputs[i],self.outputs[0],cycle)
+            #cheat a bit here. Send them both on, but mark them so we can ignore one and delete it
+            self.slots[0].other_num = self.slots[1].num
+            self.slots = [None,None]
+
+    def ProcessLeaving(self,output,number,cycle):
+        if number.other_num == None:
+            #it's the dummy, kill it
+            if number.start:
+                try:
+                    number.start.numbers.remove(number)
+                except KeyError:
+                    pass
+            number.Kill()
+            return
+        self.Process(number,cycle)
+        if output.next:
+            number.SetTarget(output,output.next,cycle)
+        else:
+            number.Kill()
+
+class Add(TwoInput):
+    title = "Add"
+    short_form = title
+    help = """Adds the two input numbers together"""
+    Symbol = TextSymbolCreator("+")
+    input = True
+    output = True
+    input_classes = [InputButton,InputButton]
+
+    def Process(self,number,cycle):
+        number.SetNum(number.num + number.other_num)
+        number.other_num = None
 
 class CodeCreator(ui.HoverableElement):
     def __init__(self,parent,pos,tr,code_class):
