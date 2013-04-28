@@ -137,7 +137,7 @@ class IntroMode(Mode):
 
     - drag blocks from the bar            - connect inputs to outputs            - watch and listen                    - potato"""
     button_text = 'one'
-    target_level = LevelOne
+    target_level = LevelThree
     def __init__(self,parent):
         self.parent = parent
         self.parent.UIDisable()

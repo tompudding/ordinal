@@ -995,7 +995,7 @@ class CodeCreator(ui.HoverableElement):
 class CodeBar(ui.UIElement):
     def __init__(self,parent,bl,tr):
         super(CodeBar,self).__init__(parent,bl,tr)
-        self.backdrop = ui.Box(self,Point(0,0),Point(1,1),colour = drawing.constants.colours.white,buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.backdrop = ui.Box(self,Point(0,0),Point(1,1),colour = (0.6,0.6,0.6,0.6),buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.max_num = 36
         self.button_width = 0.08
         self.spacing = (1.0-self.button_width)/(self.max_num+1)

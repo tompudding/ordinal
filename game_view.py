@@ -110,7 +110,7 @@ class Viewpos(object):
                 self.pos = (self.start_point + (self.target_change*partial)).to_int()
 
 class GameView(ui.RootElement):
-    timer_update_duration = 0.1
+    timer_update_duration = 0.01
     def __init__(self):
         self.atlas = globals.atlas = drawing.texture.TextureAtlas('tiles_atlas_0.png','tiles_atlas.txt')
         self.game_over = False
@@ -121,7 +121,7 @@ class GameView(ui.RootElement):
         self.grid.Disable()
 
         self.ui = ui.UIElement(globals.screen_root,Point(0,0),Point(1,1)) 
-        self.timer = ui.Box(self.ui,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.timer = ui.Box(self.ui,Point(0.75,0.95),Point(1,1),colour = (0.6,0.6,0.6,0.6),buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.timer.text = ui.TextBox(parent = self.timer,
                                      bl     = Point(0,0),
                                      tr     = Point(1,0.90),
@@ -131,7 +131,7 @@ class GameView(ui.RootElement):
                                      textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
                                      alignment = drawing.texture.TextAlignments.RIGHT,
                                      level = drawing.constants.DrawLevels.ui)
-        self.time_controls = ui.Box(self.ui,Point(0.76,0.035),Point(0.98,0.2),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
+        self.time_controls = ui.Box(self.ui,Point(0.76,0.035),Point(0.98,0.2),colour = (0.6,0.6,0.6,0.6),buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.speed_points = [(v/1000.0,i) for i,v in enumerate((0,0.25,1,2,4,8))]
         self.speed = 0.25/1000.0
 
@@ -392,16 +392,15 @@ class GameView(ui.RootElement):
                 continue
             code = num.target.parent
             try:
-                slot = num.target.parent.slots.index(num.target)
+                slot = code.inputs.index(num.target)
             except ValueError:
                 #the target is not in the slots. assume that it's going to empty
                 goingtoempty.append(num)
                 continue
             if code.slots[slot] == None:
-                gointtoempty.append(num)
+                goingtoempty.append(num)
             else:
                 goingtofull.append(num)
-        #print len(stationary),len(goingtoempty),len(goingtofull)
         for num in itertools.chain(stationary,goingtoempty,goingtofull):
             num.Update(self.t)
         
