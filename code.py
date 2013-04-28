@@ -750,7 +750,7 @@ class AlternateSong(Sink):
         globals.sounds.sawsong1[item%len(globals.sounds.sawsong1)].play()
 
 class PowerSong(Sink):
-    sequence = [3**9 for i in xrange(12)]
+    sequence = [81 for i in xrange(12)]
     def Matched(self,item):
         globals.sounds.sawsong3[item%len(globals.sounds.sawsong3)].play()
 
