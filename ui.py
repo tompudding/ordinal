@@ -458,12 +458,13 @@ class Box(UIElement):
         self.quad.SetColour(self.unselectable_colour)
 
 class Grid(UIElement):
+    """spacing is absolute"""
     def __init__(self,parent,pos,tr,spacing,colour = drawing.constants.colours.white):
         super(Grid,self).__init__(parent,pos,tr)
         self.lines = []
         start = self.GetAbsolute(pos)
         end   = self.GetAbsolute(tr)
-        skip  = self.absolute.size*spacing
+        skip  = spacing
         while start.y < end.y:
             #Add horizontal lines
             new_line = drawing.Line(globals.line_buffer)

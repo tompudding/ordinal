@@ -130,7 +130,6 @@ class SourceOutputButton(OutputButton):
         super(SourceOutputButton,self).EndHover()
         self.root.UnshowHelp()
 
-
 class SinkInputButton(InputButton):
     message = "This sink expects the following numbers "
 
@@ -288,12 +287,14 @@ class CodePrimitive(ui.UIElement):
     line_peturb  = 0.5
     input_class  = InputButton
     output_class = OutputButton
-    def __init__(self,parent,pos,tr,colour):
+    target_size  = Point(300,200).to_float()
+    def __init__(self,parent,pos,colour):
         self.colour = colour
         self.next = None
         self.prev = None
         #numbers is a list of numbers that are either inside us or on the way to the next number
         self.numbers = set()
+        tr = pos + (self.target_size/parent.absolute.size)
         super(CodePrimitive,self).__init__(parent,pos,tr)
         self.title_bar = ui.TitleBar(self,Point(0,0.9),Point(1,1),self.title,colour = self.colour,buffer=globals.colour_tiles)
         self.content = ui.Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.dark_grey,buffer = globals.colour_tiles)
@@ -584,6 +585,7 @@ class TwoSong(Sink):
 class Increment(CodePrimitive):
     title  = "Increment"
     short_form = 'INC'
+    help = """Increment increases the value of the input number by one"""
     Symbol = TextSymbolCreator("+1")
     input  = True
     output = True
@@ -605,6 +607,28 @@ class CodeCreator(ui.HoverableElement):
                                 textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
                                 alignment = drawing.texture.TextAlignments.CENTRE,
                                 level = drawing.constants.DrawLevels.ui+1000)
+        self.dragging = None
+
+    def Depress(self,pos):
+        #new_code = self.code_class(
+        self.dragging = pos
+        return self
+
+    def Undepress(self):
+        self.dragging = None
+
+    def MouseMotion(self,pos,rel,handled):
+        if self.dragging != None:
+            print 'jim',self.dragging,pos
+
+    def Hover(self):
+        super(CodeCreator,self).Hover()
+        globals.current_view.SetHelpText(self.code_class.help)
+        
+    def EndHover(self):
+        super(CodeCreator,self).EndHover()
+        globals.current_view.UnshowHelp()
+        
     
 
 class CodeBar(ui.UIElement):

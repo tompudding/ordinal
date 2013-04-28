@@ -116,12 +116,12 @@ class GameView(ui.RootElement):
         self.game_over = False
         #pygame.mixer.music.load('music.ogg')
         #self.music_playing = False
-        super(GameView,self).__init__(Point(0,0),Point(2000,2000))
-        self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(0.04,0.04))
+        super(GameView,self).__init__(Point(0,0),Point(8000,8000))
+        self.grid = ui.Grid(self,Point(0,0),Point(1,1),Point(80,80))
         self.grid.Disable()
-        self.box = code.OneSource(self,Point(0.1,0.1),Point(0.25,0.2),drawing.constants.colours.white)
-        self.inc = code.Increment(self,Point(0.3,0.14),Point(0.45,0.24),drawing.constants.colours.white)
-        self.sink = code.TwoSong(self,Point(0.51,0.14),Point(0.66,0.24),drawing.constants.colours.white)
+        self.box = code.OneSource(self,Point(0.38,0.4),drawing.constants.colours.white)
+        self.inc = code.Increment(self,Point(0.45,0.41),drawing.constants.colours.white)
+        self.sink = code.TwoSong(self,Point(0.52,0.39),drawing.constants.colours.white)
         #self.num = code.Number(self,Point(0.1,0.25),Point(0.22,0.28),40000)
         self.timer = ui.Box(globals.screen_root,Point(0.75,0.95),Point(1,1),colour = drawing.constants.colours.white,buffer = globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
         self.timer.text = ui.TextBox(parent = self.timer,
@@ -218,7 +218,7 @@ class GameView(ui.RootElement):
         #skip titles for development of the main game
         #self.mode = modes.Titles(self)
         self.mode = modes.GameMode(self)
-        self.viewpos = Viewpos(Point(500,0))
+        self.viewpos = Viewpos(Point(2800,2700))
         self.dragging = None
         self.zoom = 0.65
         self.zooming = None
