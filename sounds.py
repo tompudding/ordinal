@@ -20,6 +20,7 @@ class Sounds(object):
                 sound.set_volume(0.4)
             setattr(self,name,sound)
         self.sawsong  = [self.sawe,self.sawg,self.sawb]*2 + [self.sawd,self.sawg,self.sawb]*2 
-        self.sawsong1 = [self.sawb,self.sawa,self.sawe]*2 + [self.sawa,self.sawf,self.sawd]*2
-
-        
+        self.sawsong1 = [self.sawb,self.sawg,self.sawe]*2 + [self.sawa,self.sawf,self.sawd]*2
+        self.sawsong2 = [self.sawe,self.sawa,self.sawg,self.sawc,self.sawf]*2
+        self.sawsong3 = [self.sawe,self.sawf,self.sawe,self.sawg,self.sawe,self.sawa,self.sawe,self.sawb]
+        self.sawsong3.extend([self.sawe,self.sawb,self.sawe,self.sawa,self.sawe,self.sawg,self.sawe,self.sawf,self.sawe])

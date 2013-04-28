@@ -666,11 +666,13 @@ class Source(CodePrimitive):
         pass
 
 
-#Should really do the following with a decorator I think but I don't have time to look up the syntax
-class OneSource(Source):
-    def generator(self):
-        while True:
-            yield 1
+
+def NumberGenerator(num):
+    class NumberSource(Source):
+        def generator(self):
+            while True:
+                yield num
+    return NumberSource
 
 class FibonacciSource(Source):
     def generator(self):
@@ -680,6 +682,7 @@ class FibonacciSource(Source):
             last = (last[1],n)
             yield n
 
+
 class ArithmeticSource(Source):
     def generator(self):
         step = 2
@@ -688,22 +691,6 @@ class ArithmeticSource(Source):
             yield last
             last = last + step
             
-
-
-class TwoSource(Source):
-    def generator(self):
-        while True:
-            yield 2
-
-class ThreeSource(Source):
-    def generator(self):
-        while True:
-            yield 3
-
-class FiveSource(Source):
-    def generator(self):
-        while True:
-            yield 5
 
 
 class Sink(CodePrimitive):
@@ -753,15 +740,20 @@ class TwoSong(Sink):
         globals.sounds.sawsong[item%len(globals.sounds.sawsong)].play()
 
 class Two2Song(Sink):
-    sequence = [2,2,2,2,2]
+    sequence = [2]*12
     def Matched(self,item):
-        globals.sounds.sweet2.play()
-
+        globals.sounds.sawsong2[item%len(globals.sounds.sawsong2)].play()
 
 class AlternateSong(Sink):
     sequence = [2,7]*6
     def Matched(self,item):
-        globals.sounds.sawsong1[item%len(globals.sounds.sawsong)].play()
+        globals.sounds.sawsong1[item%len(globals.sounds.sawsong1)].play()
+
+class PowerSong(Sink):
+    sequence = [3**9 for i in xrange(12)]
+    def Matched(self,item):
+        globals.sounds.sawsong3[item%len(globals.sounds.sawsong3)].play()
+
 
 class Increment(CodePrimitive):
     title  = "Increment"
@@ -773,6 +765,18 @@ class Increment(CodePrimitive):
 
     def Process(self,number,cycle):
         number.SetNum(number.num + 1)
+
+class Double(CodePrimitive):
+    title  = "Double"
+    short_form = 'LSL'
+    help = """Double the number (left shift in binary)"""
+    Symbol = TextSymbolCreator("<<")
+    input  = True
+    output = True
+
+    def Process(self,number,cycle):
+        number.SetNum(number.num<<1)
+
 
 class TwoInput(CodePrimitive):
     """
@@ -993,7 +997,7 @@ class CodeBar(ui.UIElement):
     def __init__(self,parent,bl,tr):
         super(CodeBar,self).__init__(parent,bl,tr)
         self.backdrop = ui.Box(self,Point(0,0),Point(1,1),colour = (0.6,0.6,0.6,0.6),buffer=globals.ui_buffer,level = drawing.constants.DrawLevels.ui)
-        self.max_num = 36
+        self.max_num = 50
         self.button_width = 0.08
         self.spacing = (1.0-self.button_width)/(self.max_num+1)
         self.buttons = []

@@ -96,7 +96,7 @@ class GameMode(Mode):
 class LevelOne(GameMode):
     def __init__(self,parent):
         super(LevelOne,self).__init__(parent)
-        self.source = code.OneSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white)
+        self.source = code.NumberGenerator(1)(self.parent,Point(0.38,0.4),drawing.constants.colours.white)
         self.sink   = code.TwoSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white)
         self.parent.AddCode(self.source)
         self.parent.AddCode(self.sink)
@@ -114,9 +114,9 @@ class LevelOne(GameMode):
 class LevelTwo(GameMode):
     def __init__(self,parent):
         super(LevelTwo,self).__init__(parent)
-        self.parent.AddCode(code.TwoSource(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
-        self.parent.AddCode(code.ThreeSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
-        self.parent.AddCode(code.FiveSource(self.parent,Point(0.38,0.35),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(2)(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(3)(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(5)(self.parent,Point(0.38,0.35),drawing.constants.colours.white))
         self.parent.AddCode(code.AlternateSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
         self.parent.Play(None)
         pygame.mixer.music.play(-1)
@@ -127,6 +127,45 @@ class LevelTwo(GameMode):
         self.parent.UIDisable()
         self.parent.mode = LevelThreeIntro(self.parent,blocks,cycles)
         pygame.mixer.music.stop()
+
+class LevelThree(GameMode):
+    def __init__(self,parent):
+        super(LevelThree,self).__init__(parent)
+        self.parent.AddCode(code.ArithmeticSource(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
+        self.parent.AddCode(code.ArithmeticSource(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
+        self.parent.AddCode(code.Two2Song(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
+        self.parent.Play(None)
+        pygame.mixer.music.play(-1)
+        
+    def Complete(self,blocks,cycles):
+        self.parent.Stop(None)
+        self.parent.Reset()
+        self.parent.UIDisable()
+        self.parent.mode = LevelFourIntro(self.parent,blocks,cycles)
+        pygame.mixer.music.stop()
+
+class LevelFour(GameMode):
+    def __init__(self,parent):
+        super(LevelFour,self).__init__(parent)
+        self.parent.AddCode(code.NumberGenerator(0xea3c)(self.parent,Point(0.38,0.51),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(0x50a1)(self.parent,Point(0.38,0.48),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(0x9361)(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
+        #self.parent.AddCode(code.NumberGenerator(0xea3d)(self.parent,Point(0.38,0.42),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(3**9)(self.parent,Point(0.38,0.42),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(1)(self.parent,Point(0.38,0.39),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(1)(self.parent,Point(0.38,0.36),drawing.constants.colours.white))
+
+        self.parent.AddCode(code.PowerSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
+        self.parent.Play(None)
+        pygame.mixer.music.play(-1)
+        
+    def Complete(self,blocks,cycles):
+        self.parent.Stop(None)
+        self.parent.Reset()
+        self.parent.UIDisable()
+        self.parent.mode = LevelFiveIntro(self.parent,blocks,cycles)
+        pygame.mixer.music.stop()
+
 
 class LevelThree(GameMode):
     def __init__(self,parent):
@@ -181,12 +220,12 @@ def quit(self,parent):
     raise SystemExit('bye')
 
 class GameOver(IntroMode):
-    blurb = 'Congratulations!'
+    blurb = '             Congratulations!'
     button_text = 'zero'
     target_level = quit
                                    
 class LevelTwoIntro(IntroMode):
-    blurb = 'You used {num_symbols} code blocks and took {cycles} cycles. Try to do better on the next level'
+    blurb = 'You used {num_symbols} code blocks and took {cycles} cycles. Not bad!'
     target_level = LevelTwo
     button_text = 'two'
 
@@ -200,7 +239,12 @@ class LevelThreeIntro(LevelTwoIntro):
     
 
 class LevelFourIntro(LevelTwoIntro):
+    blurb = 'You used {num_symbols} code blocks and took {cycles} cycles. This next level is a bit tricky. Sorry'
+    target_level = LevelFour
+    button_text = 'four'
+    
+class LevelFiveIntro(LevelTwoIntro):
     blurb = 'You used {num_symbols} code blocks and took {cycles} cycles.'
     target_level = GameOver
-    button_text = 'three'
+    button_text = 'five'
     

@@ -136,7 +136,7 @@ class GameView(ui.RootElement):
         self.speed = 0.25/1000.0
 
         self.mouse_text_colour    = (1,1,1,1)
-        self.mouse_backdrop = ui.Box(self.ui,Point(0.005,0.005),Point(0.3,0.06),colour = drawing.constants.colours.black,buffer = globals.mouse_relative_tiles,level = drawing.constants.DrawLevels.ui)
+        self.mouse_backdrop = ui.Box(self.ui,Point(0.005,0.005),Point(0.4,0.06),colour = drawing.constants.colours.black,buffer = globals.mouse_relative_tiles,level = drawing.constants.DrawLevels.ui)
         self.mouse_text           = ui.TextBox(parent   = self.mouse_backdrop,
                                                bl       = Point(0,0)  ,
                                                tr       = Point(1,1)      ,
@@ -197,6 +197,7 @@ class GameView(ui.RootElement):
 
         self.code_bar = code.CodeBar(self.ui,Point(0.03,0.035),Point(0.7,0.2))
         self.code_bar.AddButton(code.Increment)
+        self.code_bar.AddButton(code.Double)
         self.code_bar.AddButton(code.Add)
         self.code_bar.AddButton(code.Sub)
         self.code_bar.AddButton(code.Multiply)
@@ -421,13 +422,6 @@ class GameView(ui.RootElement):
             self.set_speed(self.speed * 1.5)
         elif key == pygame.K_KP_MINUS:
             self.set_speed(self.speed / 1.5)
-        if key == pygame.K_DELETE:
-            if self.music_playing:
-                self.music_playing = False
-                pygame.mixer.music.set_volume(0)
-            else:
-                self.music_playing = True
-                pygame.mixer.music.set_volume(1)
         if key == pygame.K_SPACE:
             self.Play(None)
         if key == pygame.K_h:
