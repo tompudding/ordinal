@@ -23,7 +23,6 @@ class Connector(ui.HoverableElement):
             self.border = [drawing.Line(globals.line_buffer) for i in xrange(4)]
             self.arrow  = [drawing.Line(globals.line_buffer) for i in xrange(3)]
             self.connector_line = drawing.Line(globals.line_buffer)
-            print 'connector line with index',self.connector_line.index,self,self.parent
             self.points = []
             self.connecting = False
             for i in xrange(self.circle_segments):

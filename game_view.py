@@ -245,6 +245,8 @@ class GameView(ui.RootElement):
         self.ui.Enable()
         if not self.help_enabled or not self.help_showing:
             self.help.Disable()
+        if not self.paused:
+            self.time_controls.paused_text.Disable()
 
     def UIDisable(self):
         self.ui.Disable()
