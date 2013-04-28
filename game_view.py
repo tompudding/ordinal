@@ -6,6 +6,7 @@ from globals.types import Point
 import modes
 import random
 import code
+import itertools
 
 class Viewpos(object):
     follow_threshold = 0
@@ -375,7 +376,33 @@ class GameView(ui.RootElement):
             
 
         self.wall = t
-        for num in set(self.numbers):
+        #we've made a serious coding error with how this whole thing is implemented so that we're relying 
+        #on update order. I'd refactor the whole thing but there are less than 6 hours left and I need to do
+        #a dirty hack
+        #Update the numbers in the following order:
+        # - any that are stationary that might be activated by an interleaver
+        # - any that are heading towards an empty target
+        # - any that are heading towards an occupied target
+        stationary = []
+        goingtoempty = []
+        goingtofull = []
+        rest = []
+        for num in self.numbers:
+            if not num.target:
+                stationary.append(num)
+                continue
+            code = num.target.parent
+            try:
+                slot = num.target.parent.slots.index(num.target)
+            except ValueError:
+                #the target is not in the slots. assume that it's going to empty
+                goingtoempty.append(num)
+                continue
+            if code.slots[slot] == None:
+                gointtoempty.append(num)
+            else:
+                goingtofull.append(num)
+        for num in itertools.chain(stationary,goingtoempty,goingtofull):
             num.Update(self.t)
         
         self.viewpos.Update(self.wall)

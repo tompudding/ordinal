@@ -144,8 +144,8 @@ class IntroMode(Mode):
         self.intro_text = ui.TextBox(self.backdrop,Point(0,0.1),Point(1,0.9),text = self.blurb,scale=12,colour = drawing.constants.colours.white,level = self.level + 1)
         self.play_button = ui.TextBoxButton(parent = self.backdrop,
                                             text = self.button_text,
-                                            pos = Point(0.39,0.1),
-                                            tr = Point(0.61,0.2),
+                                            pos = Point(0.30,0.1),
+                                            tr = Point(0.7,0.2),
                                             colour = drawing.constants.colours.white,
                                             size = 24,
                                             callback = self.Play,
