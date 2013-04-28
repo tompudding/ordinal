@@ -380,7 +380,7 @@ class Number(ui.UIElement):
     def SetNum(self,num):
         self.num = num&0xffff
         hexnum = ' '.join(('%4x' % ((self.num>>i)&0xf) for i in (12,8,4,0)))
-        binnum = ' '.join(('{:04b}'.format((self.num>>i)&0xf) for i in (12,8,4,0)))
+        binnum = ' '.join(('{0:04b}'.format((self.num>>i)&0xf) for i in (12,8,4,0)))
         decnum = '%05d' % self.num
         self.hex.SetText(hexnum)
         self.bin.SetText(binnum)
