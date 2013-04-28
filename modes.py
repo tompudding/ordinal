@@ -32,9 +32,11 @@ class TitleStages(object):
 
 class Titles(Mode):
     blurb = "ORDINAL"
+    number_duration = 2000
     def __init__(self,parent):
         self.parent          = parent
         self.start           = pygame.time.get_ticks()
+        self.last = 0
         pygame.mixer.music.load('titles.ogg')
         pygame.mixer.music.play(-1)
 
@@ -61,6 +63,10 @@ class Titles(Mode):
 
     def Update(self,t):        
         self.elapsed = t - self.start
+        if self.elapsed > self.last + self.number_duration:
+            random.choice(globals.sounds.numbers).play()
+            #globals.sounds.number_one.play()
+            self.last = self.elapsed
         t = self.elapsed/2000.0
         y = 3*math.sin(t)
         x = 4*math.sin(0.666*t)
@@ -141,7 +147,7 @@ class LevelThree(GameMode):
 
 class IntroMode(Mode):
     """ The Intro mode just shows a big text box explaining how to play and has an ok button on it"""
-    blurb = """Ordinal
+    blurb = """ORDINAL
 
   In which you must guide numbers from sinks to sources to create beautiful music
 
