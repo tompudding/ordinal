@@ -10,6 +10,9 @@ twopi = math.pi*2
 class Connector(ui.HoverableElement):
     def __init__(self,parent,bl,tr):
         self.dragging = None
+        self.prev = None
+        self.next = None
+        self.numbers = set()
         self.colour = drawing.constants.colours.white
         self.highlight_colour = drawing.constants.colours.red
         super(Connector,self).__init__(parent,bl,tr)
@@ -63,6 +66,9 @@ class Connector(ui.HoverableElement):
         for line in itertools.chain(self.border,self.circle_lines,self.arrow):
             line.Delete()
         self.connector_line.Delete()
+
+    def Reset(self):
+        self.numbers = set()
         
     def Disable(self):
         if self.enabled:
@@ -78,19 +84,50 @@ class Connector(ui.HoverableElement):
             self.connector_line.Enable()
         super(Connector,self).Enable()
 
+    def ProcessArrival(self,number,cycle):
+        if number.start:
+            number.start.numbers.remove(number)
+        self.numbers.add(number)
+
+    def UpdateConnectedLineForward(self):
+        if self.next:
+            #we own the line pointing to the next guy
+            self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),self.next.GetAbsolute(Point(0.5,0.5)),drawing.constants.DrawLevels.ui)
+        for number in self.numbers:
+            number.UpdateEnds()
+            
+    def UpdateConnectedLineBackwards(self):
+        if self.prev:
+            self.prev.UpdateConnectedLineForward()
+
+    def BreakForwardLink(self):
+        pass
+
+    def BreakBackwardLink(self):
+        pass
 
 class InputButton(Connector):
     arrow_offset = Point(0,0)
 
     def OnClick(self,pos,button):
         #if you click on the input it deletes any link connecting to it
-        self.parent.BreakBackwardLink()
+        self.BreakBackwardLink()
+
+    def BreakBackwardLink(self):
+        if self.prev:
+            self.prev.connector_line.Disable()
+            self.prev.BreakForwardLink()
+
+    def ProcessArrival(self,number,cycle):
+        super(InputButton,self).ProcessArrival(number,cycle)
+        self.parent.ProcessArrival(self,number,cycle)
+
 
 class OutputButton(Connector):
     arrow_offset = Point(0.45,0)
     def OnClick(self,pos,button):
         if button == 1:
-            self.parent.BreakForwardLink()
+            self.BreakForwardLink()
             self.connecting = True
             self.connector_line.SetVertices(Point(0,0),Point(0,0),0)
             self.connector_line.Enable()
@@ -100,6 +137,21 @@ class OutputButton(Connector):
         if self.connecting:
             self.connector_line.SetVertices(self.GetAbsolute(Point(0.5,0.5)),self.root.mouse_pos,drawing.constants.DrawLevels.ui)
             self.connector_line.SetColour(drawing.constants.colours.red)
+
+    def BreakForwardLink(self):
+        if self.next:
+            self.next.prev = None
+            self.next = None
+            #kill any numbers that are on our line and haven't reached their target yet
+            for number in self.numbers:
+                    number.Kill()
+
+            self.numbers = set()
+
+    def ProcessArrival(self,number,cycle):
+        super(OutputButton,self).ProcessArrival(number,cycle)
+        self.parent.ProcessLeaving(self,number,cycle)
+
 
     #def Undepress(self):
     #    self.connecting = False
@@ -117,11 +169,11 @@ class OutputButton(Connector):
             if button == 1:
                 #did they click on something
                 hover = self.root.hovered
-                if isinstance(hover,InputButton) and hover.parent.prev == None:
-                    self.parent.next = hover.parent
-                    self.parent.next.prev = self.parent
+                if isinstance(hover,InputButton) and hover.prev == None:
+                    self.next = hover
+                    self.next.prev = self
                     self.connecting = False
-                    self.parent.UpdateConnectedLineForward()
+                    self.UpdateConnectedLineForward()
                     self.root.active_connector = None
                 else:
                     self.connecting = False
@@ -164,6 +216,17 @@ class SinkInputButton(InputButton):
     def EndHover(self):
         super(SinkInputButton,self).EndHover()
         self.root.UnshowHelp()
+
+class SourceInputButton(InputButton):
+    def __init__(self,*args,**kwargs):
+        super(SourceInputButton,self).__init__(*args,**kwargs)
+        self.Disable()
+
+class SinkOutputButton(OutputButton):
+    def __init__(self,*args,**kwargs):
+        super(SinkOutputButton,self).__init__(*args,**kwargs)
+        self.Disable()
+
 
 number_id = 0
           
@@ -231,10 +294,7 @@ class Number(ui.UIElement):
             return
         if t >= self.arrival_time:
             #we're done
-            if self.target is self.start:
-                self.start.ProcessLeaving(self,self.arrival_time)
-            else:
-                self.target.ProcessArrival(self,self.arrival_time)
+            self.target.ProcessArrival(self,self.arrival_time)
         else:
             progress = (t - self.launch_time)/self.duration
             self.bottom_left = self.start_pos + self.vector*progress
@@ -271,11 +331,11 @@ class Number(ui.UIElement):
     def UpdateEnds(self):
         if self.target is self.start:
             #we're progressing across a primitive
-            self.start_pos    = self.start.root.GetRelative(self.start.input.GetAbsolute(Point(0.5,0.5)))
-            self.end_pos      = self.target.root.GetRelative(self.start.output.GetAbsolute(Point(0.5,0.5)))
+            self.start_pos    = self.start.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
+            self.end_pos      = self.target.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
         else:
-            self.start_pos    = self.start.root.GetRelative(self.start.output.GetAbsolute(Point(0.5,0.5)))
-            self.end_pos      = self.target.root.GetRelative(self.target.input.GetAbsolute(Point(0.5,0.5)))
+            self.start_pos    = self.start.root.GetRelative(self.start.GetAbsolute(Point(0.5,0.5)))
+            self.end_pos      = self.target.root.GetRelative(self.target.GetAbsolute(Point(0.5,0.5)))
         self.vector       = self.end_pos - self.start_pos
 
     def SetNum(self,num):
@@ -308,71 +368,53 @@ class Number(ui.UIElement):
 
 
 class CodePrimitive(ui.UIElement):
-    line_peturb  = 0.5
-    input_class  = InputButton
-    output_class = OutputButton
-    target_size  = Point(300,200).to_float()
+    line_peturb   = 0.5
+    input_classes = [InputButton]
+    output_classes  = [OutputButton]
+    target_size   = Point(300,200).to_float()
     def __init__(self,parent,pos,colour):
         self.colour = colour
-        self.next = None
-        self.prev = None
         #numbers is a list of numbers that are either inside us or on the way to the next number
-        self.numbers = set()
         tr = pos + (self.target_size/parent.absolute.size)
         super(CodePrimitive,self).__init__(parent,pos,tr)
         self.title_bar = ui.TitleBar(self,Point(0,0.9),Point(1,1),self.title,colour = self.colour,buffer=globals.colour_tiles)
         self.content = ui.Box(self,Point(0,0),Point(1,0.9),colour = drawing.constants.colours.dark_grey,buffer = globals.colour_tiles)
         self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
-        self.connectors = []
         if self.input:
-            self.input = self.input_class(self,Point(0,0.4),Point(0.2,0.6)) 
-            self.connectors.append( self.input )
+            self.inputs = [ic(self,Point(0,0.4),Point(0.2,0.6)) for ic in self.input_classes]
         else:
-            self.input = ui.UIElement(self,Point(0,0.4),Point(0.2,0.6)) 
+            self.inputs = [SourceInputButton(self,Point(0,0.4),Point(0.2,0.6))]
         if self.output:
-            self.output = self.output_class(self,Point(0.8,0.4),Point(1.0,0.6)) 
-            self.connectors.append( self.output )
+            self.outputs = [oc(self,Point(0.8,0.4),Point(1.0,0.6)) for oc in self.output_classes]
         else:
-            self.output = ui.UIElement(self,Point(0.8,0.4),Point(1.0,0.6))
+            self.outputs = [SinkOutputButton(self,Point(0.8,0.4),Point(1.0,0.6))]
 
         self.UpdatePosition()
         self.SetColour(self.colour)
         self.symbol = self.Symbol(self.content,Point(0,0),Point(1,1))
 
     def Reset(self):
-        self.numbers = set()
+        if self.input:
+            for i in self.inputs:
+                i.Reset()
+        if self.output:
+            for o in self.outputs:
+                o.Reset()
 
     def DeleteCallback(self,pos):
         self.Delete()
 
-    def BreakForwardLink(self):
-        if self.next:
-            self.next.prev = None
-            self.next = None
-            #kill any numbers that are on our line and haven't reached their target yet
-            new_numbers = set()
-            for number in self.numbers:
-                if number.target is not self:
-                    number.Kill()
-                else:
-                    new_numbers.add(number)
-            self.numbers = new_numbers
-
-    def BreakBackwardLink(self):
-        if self.prev:
-            self.prev.output.connector_line.Disable()
-            self.prev.BreakForwardLink()
-
     def UpdateConnectedLineForward(self):
-        if self.next:
-            #we own the line pointing to the next guy
-            self.output.connector_line.SetVertices(self.output.GetAbsolute(Point(0.5,0.5)),self.next.input.GetAbsolute(Point(0.5,0.5)),drawing.constants.DrawLevels.ui)
-        for number in self.numbers:
-            number.UpdateEnds()
+        if not self.output:
+            return
+        for o in self.outputs:
+            o.UpdateConnectedLineForward()
             
     def UpdateConnectedLineBackwards(self):
-        if self.prev:
-            self.prev.UpdateConnectedLineForward()
+        if not self.input:
+            return
+        for i in self.inputs:
+            i.UpdateConnectedLineBackwards()
 
     def UpdatePosition(self):
         super(CodePrimitive,self).UpdatePosition()
@@ -391,10 +433,12 @@ class CodePrimitive(ui.UIElement):
 
     def Delete(self):
         super(CodePrimitive,self).Delete()
-        self.BreakForwardLink()
-        self.BreakBackwardLink()
-        for number in self.numbers:
-            number.Kill()
+        if self.output:
+            for o in self.outputs:
+                o.BreakForwardLink()
+        if self.input:
+            for i in self.inputs:
+                i.BreakBackwardLink()
         for line in self.border:
             line.Delete()
         self.symbol.Delete()
@@ -416,18 +460,13 @@ class CodePrimitive(ui.UIElement):
         for line in self.border:
             line.SetColour(self.colour)
 
-    def ProcessArrival(self,number,cycle):
-        if number.start and number.start is not self:
-            number.start.numbers.remove(number)
-        number.SetTarget(self,self,cycle)
-        self.numbers.add(number)
+    def ProcessArrival(self,input,number,cycle):
+        number.SetTarget(self.inputs[0],self.outputs[0],cycle)
 
-    def ProcessLeaving(self,number,cycle):
+    def ProcessLeaving(self,output,number,cycle):
         self.Process(number,cycle)
-        #The number will get removed when it arrives at the next place
-        #self.numbers.remove(number)
-        if self.next:
-            number.SetTarget(self,self.next,cycle)
+        if output.next:
+            number.SetTarget(output,output.next,cycle)
         else:
             number.Kill()
 
@@ -560,7 +599,7 @@ class Source(CodePrimitive):
     Symbol = SourceSymbol
     input  = False
     output = True
-    output_class = SourceOutputButton
+    output_classes = [SourceOutputButton]
 
     def __init__(self,*args,**kwargs):
         self.gen = self.generator()
@@ -568,9 +607,9 @@ class Source(CodePrimitive):
 
     def Squirt(self,cycle):
         n = next(self.gen)
-        num = Number(self.root,self.root.GetRelative(self.output.GetAbsolute(Point(0.5,0.5))),n)
+        num = Number(self.root,self.root.GetRelative(self.outputs[0].GetAbsolute(Point(0.5,0.5))),n)
         self.root.AddNumber(num)
-        self.ProcessArrival(num,cycle)
+        self.inputs[0].ProcessArrival(num,cycle)
 
     def Reset(self):
         super(Source,self).Reset()
@@ -591,7 +630,7 @@ class Sink(CodePrimitive):
     Symbol = SinkSymbol
     input  = True
     output = False
-    input_class = SinkInputButton
+    input_classes = [SinkInputButton]
 
     def __init__(self,*args,**kwargs):
         self.matched = 0
