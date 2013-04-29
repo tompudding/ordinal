@@ -115,7 +115,7 @@ class LevelTwo(GameMode):
     def __init__(self,parent):
         super(LevelTwo,self).__init__(parent)
         self.parent.AddCode(code.NumberGenerator(2)(self.parent,Point(0.38,0.45),drawing.constants.colours.white))
-        self.parent.AddCode(code.NumberGenerator(0)(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
+        self.parent.AddCode(code.NumberGenerator(3)(self.parent,Point(0.38,0.4),drawing.constants.colours.white))
         self.parent.AddCode(code.NumberGenerator(5)(self.parent,Point(0.38,0.35),drawing.constants.colours.white))
         self.parent.AddCode(code.AlternateSong(self.parent,Point(0.52,0.39),drawing.constants.colours.white))
         self.parent.Play(None)
