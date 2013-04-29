@@ -902,7 +902,11 @@ class Divide(TwoInput):
     input_classes = [InputButton,InputButton]
 
     def Process(self,number,cycle):
-        number.SetNum(number.num / number.other_num)
+        try:
+            number.SetNum(number.num / number.other_num)
+        except ZeroDivisionError:
+            number.Kill()
+            return
         number.other_num = None
 
 class XOR(TwoInput):
