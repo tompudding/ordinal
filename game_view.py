@@ -231,6 +231,7 @@ class GameView(ui.RootElement):
         self.sources = []
         self.blocks = []
         self.mode = modes.Titles(self)
+        self.ResetOrderCache()
 
     def UIEnable(self):
         self.ui.Enable()
@@ -326,16 +327,49 @@ class GameView(ui.RootElement):
     def NewCycle(self,cycle):
         for block in self.blocks:
             block.NewCycle(cycle)
+        self.ResetOrderCache()
 
     def AddNumber(self,number):
         self.numbers.add(number)
+        self.ResetOrderCache()
 
     def RemoveNumber(self,number):
         try:
             self.numbers.remove(number)
+            self.ResetOrderCache()
         except KeyError:
             #it's already been deleted, probably by a global reset. Whatever!
             pass
+
+    def ResetOrderCache(self):
+        #we've made a serious coding error with how this whole thing is implemented so that we're relying 
+        #on update order. I'd refactor the whole thing but there are less than 6 hours left and I need to do
+        #a dirty hack
+        #Update the numbers in the following order:
+        # - any that are stationary that might be activated by an interleaver
+        # - any that are heading towards an empty target
+        # - any that are heading towards an occupied target
+        stationary = []
+        goingtoempty = []
+        goingtofull = []
+        rest = []
+        for num in self.numbers:
+            if not num.target:
+                stationary.append(num)
+                continue
+            code = num.target.parent
+            try:
+                slot = code.inputs.index(num.target)
+            except ValueError:
+                #the target is not in the slots. assume that it's going to empty
+                goingtoempty.append(num)
+                continue
+            if code.slots[slot] == None:
+                goingtoempty.append(num)
+            else:
+                goingtofull.append(num)
+        self.number_list = stationary + goingtoempty + goingtofull
+
 
     def Draw(self):
         drawing.ResetState()
@@ -378,33 +412,7 @@ class GameView(ui.RootElement):
             
 
         self.wall = t
-        #we've made a serious coding error with how this whole thing is implemented so that we're relying 
-        #on update order. I'd refactor the whole thing but there are less than 6 hours left and I need to do
-        #a dirty hack
-        #Update the numbers in the following order:
-        # - any that are stationary that might be activated by an interleaver
-        # - any that are heading towards an empty target
-        # - any that are heading towards an occupied target
-        stationary = []
-        goingtoempty = []
-        goingtofull = []
-        rest = []
-        for num in self.numbers:
-            if not num.target:
-                stationary.append(num)
-                continue
-            code = num.target.parent
-            try:
-                slot = code.inputs.index(num.target)
-            except ValueError:
-                #the target is not in the slots. assume that it's going to empty
-                goingtoempty.append(num)
-                continue
-            if code.slots[slot] == None:
-                goingtoempty.append(num)
-            else:
-                goingtofull.append(num)
-        for num in itertools.chain(stationary,goingtoempty,goingtofull):
+        for num in self.number_list:
             num.Update(self.t)
         
         self.viewpos.Update(self.wall)
