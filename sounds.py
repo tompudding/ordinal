@@ -24,3 +24,9 @@ class Sounds(object):
         self.sawsong2 = [self.sawe,self.sawa,self.sawg,self.sawc,self.sawf]*2
         self.sawsong3 = [self.sawe,self.sawf,self.sawe,self.sawg,self.sawe,self.sawa,self.sawe,self.sawb]
         self.sawsong3.extend([self.sawe,self.sawb,self.sawe,self.sawa,self.sawe,self.sawg,self.sawe,self.sawf,self.sawe])
+        self.channels = [pygame.mixer.Channel(i) for i in xrange(8)]
+        self.current_channel = 0
+
+    def Play(self,sound):
+        self.channels[self.current_channel].play(sound)
+        self.current_channel = (self.current_channel + 1)%len(self.channels)

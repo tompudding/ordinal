@@ -259,7 +259,7 @@ number_id = 0
 class Number(ui.UIElement):
     title = 'Number:'
     line_peturb = 0.5
-    target_size = Point(240,60).to_float()
+    target_size = Point(80,20).to_float()
     def __init__(self,parent,pos,num):
         global number_id
         tr = pos + (self.target_size/parent.absolute.size)
@@ -276,38 +276,21 @@ class Number(ui.UIElement):
         #we want the title bar to be 22 pixels high
         target_height = 22
         title_bottom = 1-(22.0/self.absolute.size.y)
-        self.title_bar = ui.NumberBar(self,Point(0,title_bottom),Point(1,1),self.title,colour = None,buffer=globals.colour_tiles)
-        self.content = ui.Box(self,Point(0,0),Point(1,title_bottom),colour = drawing.constants.colours.white,buffer = globals.colour_tiles)
+        self.content = ui.Box(self,Point(0,0),Point(1,1),colour = drawing.constants.colours.black,buffer = globals.colour_tiles)
         self.border = [drawing.Line(globals.line_buffer) for i in 0,1,2,3]
-        self.hex = ui.TextBox(parent = self,
-                              bl = Point(-0.15,0.0),
-                              tr = Point(0.95,0.25),
-                              text = ' ',
-                              scale = 6,
-                              colour = drawing.constants.colours.black,
-                              textType = drawing.texture.TextTypes.GRID_RELATIVE,
-                              alignment = drawing.texture.TextAlignments.RIGHT)
         self.dec = ui.TextBox(parent = self,
-                              bl = Point(0,title_bottom),
-                              tr = Point(1.05,0.97),
+                              bl = Point(0,0),
+                              tr = Point(1,1),
                               text = ' ',
                               scale = 7,
                               colour = drawing.constants.colours.white,
-                              textType = drawing.texture.TextTypes.GRID_RELATIVE,
-                              alignment = drawing.texture.TextAlignments.RIGHT)
-        self.bin = ui.TextBox(parent = self,
-                              bl = Point(-0.05,0.25),
-                              tr = Point(1.05,0.5),
-                              text = ' ',
-                              scale = 6,
-                              colour = drawing.constants.colours.black,
                               textType = drawing.texture.TextTypes.GRID_RELATIVE,
                               alignment = drawing.texture.TextAlignments.RIGHT)
         for line in self.border:
             line.SetColour(drawing.constants.colours.white)
         self.SetNum(self.num)
         self.UpdatePosition()
-        self.readouts = [self.dec,self.hex,self.bin]
+        self.readouts = [self.dec]
         for readout in self.readouts:
             readout.Enable()
         self.SetOpacity(0.8)
@@ -379,11 +362,7 @@ class Number(ui.UIElement):
 
     def SetNum(self,num):
         self.num = num&0xffff
-        hexnum = ' '.join(('%4x' % ((self.num>>i)&0xf) for i in (12,8,4,0)))
-        binnum = ' '.join(('{0:04b}'.format((self.num>>i)&0xf) for i in (12,8,4,0)))
-        decnum = '%05d' % self.num
-        self.hex.SetText(hexnum)
-        self.bin.SetText(binnum)
+        decnum = '%d' % self.num
         self.dec.SetText(decnum)
 
     def UpdatePosition(self):
@@ -719,7 +698,7 @@ class Sink(CodePrimitive):
                 self.root.SetHelpText(self.inputs[0].message + ' '.join('%d' % v for v in self.sequence[self.matched:]))
         else:
             #play bad noise
-            globals.sounds.bad.play()
+            globals.sounds.Play(globals.sounds.bad)
             print 'bad note!',number.num,self.sequence[self.matched:]
             self.matched = 0
             if self.root.HelpShowing():
@@ -737,22 +716,22 @@ class Sink(CodePrimitive):
 class TwoSong(Sink):
     sequence = [2]*12
     def Matched(self,item):
-        globals.sounds.sawsong[item%len(globals.sounds.sawsong)].play()
+        globals.sounds.Play(globals.sounds.sawsong[item%len(globals.sounds.sawsong)])
 
 class Two2Song(Sink):
     sequence = [2]*12
     def Matched(self,item):
-        globals.sounds.sawsong2[item%len(globals.sounds.sawsong2)].play()
+        globals.sounds.Play(globals.sounds.sawsong2[item%len(globals.sounds.sawsong2)])
 
 class AlternateSong(Sink):
     sequence = [2,7]*6
     def Matched(self,item):
-        globals.sounds.sawsong1[item%len(globals.sounds.sawsong1)].play()
+        globals.sounds.Play(globals.sounds.sawsong1[item%len(globals.sounds.sawsong1)])
 
 class PowerSong(Sink):
     sequence = [81 for i in xrange(12)]
     def Matched(self,item):
-        globals.sounds.sawsong3[item%len(globals.sounds.sawsong3)].play()
+        globals.sounds.Play(globals.sounds.sawsong3[item%len(globals.sounds.sawsong3)])
 
 
 class Increment(CodePrimitive):
