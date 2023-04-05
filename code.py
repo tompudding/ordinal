@@ -519,15 +519,12 @@ class CodePrimitive(ui.UIElement):
         self.UpdateConnectedLineBackwards()
 
     def Delete(self):
-        print("Delete code prim")
         super(CodePrimitive, self).Delete()
         if self.output:
             for o in self.outputs:
-                print("Break output")
                 o.BreakForwardLink()
         if self.input:
             for i in self.inputs:
-                print("Break input")
                 i.BreakBackwardLink()
         for line in self.border:
             line.Delete()
@@ -1063,6 +1060,7 @@ class CodeCreator(ui.HoverableElement):
             drawing.constants.colours.white,
         )
         new_code.level_bonus = 100
+        new_code.start_drag()
         self.last_opacity = 1
         self.dragging = (create_pos, new_code)
         return self
@@ -1076,6 +1074,7 @@ class CodeCreator(ui.HoverableElement):
                 new_code.level_bonus = 0
                 new_code.UpdatePosition()
                 globals.current_view.AddCode(new_code)
+                new_code.end_drag()
         self.dragging = None
 
     def MouseMotion(self, pos, rel, handled):

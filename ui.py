@@ -15,11 +15,15 @@ class UIElementList:
     def __init__(self):
         self.items = {}
 
-    def __setitem__(self, item, value):
-        self.items[item] = value
+    # def __setitem__(self, item, value):
+    #     try:
+    #         self.items[item.full_pos].append()
+    #     except KeyError:
+    #         self.items[item] = [value]
 
-    def __delitem__(self, item):
-        del self.items[item]
+    # def __delitem__(self, item):
+    #     raise nonk
+    #     del self.items[item]
 
     def __contains__(self, item):
         return item in self.items
@@ -29,25 +33,66 @@ class UIElementList:
 
     def __repr__(self):
         out = ["UIElementList:"]
-        for item in self.items:
-            out.append(
-                "%s:%s - %s(%s)"
-                % (
-                    item.absolute.bottom_left,
-                    item.absolute.top_right,
-                    str(item),
-                    item.text if hasattr(item, "text") else "N/A",
+        for full_pos, item_list in self.items.items():
+            out.append(f"{full_pos=}")
+            for item in item_list:
+                out.append(
+                    "%s:%s - %s(%s)"
+                    % (
+                        item.absolute.bottom_left,
+                        item.absolute.top_right,
+                        str(item),
+                        item.text if hasattr(item, "text") else "N/A",
+                    )
                 )
-            )
+            out.append("-" * 80)
         return "\n".join(out)
+
+    def add(self, item):
+        try:
+            old_list = self.items[item.full_pos]
+            # This is a hack, sometimes we add them twice
+            if item not in old_list:
+                self.items[item.full_pos].append(item)
+        except KeyError:
+            self.items[item.full_pos] = [item]
+
+    def remove(self, item):
+        if item.full_pos not in self.items:
+            return
+
+        new_list = [ui for ui in self.items[item.full_pos] if ui is not item]
+        if new_list:
+            self.items[item.full_pos] = new_list
+        else:
+            del self.items[item.full_pos]
+
+    def update(self, item, orig_pos):
+        if orig_pos not in self.items:
+            return
+
+        new_list = [ui for ui in self.items[orig_pos] if ui is not item]
+        if new_list:
+            self.items[orig_pos] = new_list
+        else:
+            del self.items[orig_pos]
+
+        self.add(item)
+
+    def delete_all(self):
+        for ui_list in self.values():
+            for ui in ui_list:
+                ui.Delete()
+        self.items = {}
 
     def Get(self, pos):
         """Return the object at a given absolute position, or None if None exist"""
         match = [-1, None]
-        for ui, height in self.items.items():
-            if pos in ui and ui.Selectable():
-                if height > match[0]:
-                    match = [height, ui]
+        for full_pos, ui_list in self.items.items():
+            for ui in ui_list:
+                if pos in ui and ui.Selectable():
+                    if ui.level > match[0]:
+                        match = [ui.level, ui]
         return match[1]
 
 
@@ -231,8 +276,20 @@ class UIElement(object):
         for child in self.children:
             child.MakeUnselectable()
 
+    def start_drag(self):
+        for child_element in self.children:
+            child_element.start_drag()
+
+    def end_drag(self):
+        for child_element in self.children:
+            child_element.end_drag()
+
     def __hash__(self):
-        return hash((self.absolute.bottom_left, self.absolute.top_right, self.level))
+        return hash(self.full_pos)
+
+    @property
+    def full_pos(self):
+        return (self.absolute.bottom_left, self.absolute.top_right, int(self.level))
 
 
 class RootElement(UIElement):
@@ -257,19 +314,16 @@ class RootElement(UIElement):
         self.SetBounds(bl, tr)
 
     def RegisterUIElement(self, element):
-        self.active_children[element] = element.level
+        self.active_children.add(element)
 
     def RemoveUIElement(self, element):
-        try:
-            del self.active_children[element]
-        except KeyError:
-            pass
+        self.active_children.remove(element)
+
+    def update_ui(self, element, orig_pos):
+        self.active_children.update(element, orig_pos)
 
     def RemoveAllUIElements(self):
-        toremove = [child for child in self.active_children.items]
-        for child in toremove:
-            child.Delete()
-        self.active_children = UIElementList()
+        self.active_children.delete_all()
 
     def RegisterUpdateable(self, item):
         self.updateable_children[item] = True
@@ -413,6 +467,7 @@ class HoverableElement(UIElement):
     def __init__(self, parent, pos, tr):
         super(HoverableElement, self).__init__(parent, pos, tr)
         self.root.RegisterUIElement(self)
+        self.start_drag_pos = None
 
     def Delete(self):
         self.root.RemoveUIElement(self)
@@ -427,6 +482,15 @@ class HoverableElement(UIElement):
         if not self.enabled:
             self.root.RegisterUIElement(self)
         super(HoverableElement, self).Enable()
+
+    def start_drag(self):
+        self.start_drag_pos = self.full_pos
+        super().start_drag()
+
+    def end_drag(self):
+        self.root.update_ui(self, self.start_drag_pos)
+        self.start_drag_pos = None
+        super().end_drag()
 
 
 class Box(UIElement):
@@ -559,26 +623,6 @@ class HoverableBox(Box, HoverableElement):
         pass
 
 
-class DraggableBox(HoverableBox):
-    def __init__(self, *args, **kwargs):
-        self.dragging = None
-        super(DraggableBox, self).__init__(*args, **kwargs)
-
-    def Depress(self, pos):
-        self.dragging = pos
-        self.level += 100
-        return self
-
-    def Undepress(self):
-        self.dragging = None
-        self.level -= 100
-
-    def MouseMotion(self, pos, rel, handled):
-        if self.dragging:
-            self.SetPosAbsolute(self.absolute.bottom_left + (pos - self.dragging))
-            self.dragging = pos
-
-
 class NumberBar(Box):
     def __init__(self, parent, bl, tr, title, colour, buffer):
         super(NumberBar, self).__init__(parent, bl, tr, drawing.constants.colours.black, buffer)
@@ -642,6 +686,7 @@ class TitleBar(HoverableBox):
         self.start_position = (self.parent.bottom_left, self.parent.top_right)
         self.dragging = pos
         self.parent.level_bonus = 100
+        self.parent.start_drag()
         return self
 
     def Undepress(self):
@@ -651,6 +696,7 @@ class TitleBar(HoverableBox):
             self.parent.bottom_left, self.parent.top_right = self.start_position
             self.parent.SetOpacity(1)
             self.parent.UpdatePosition()
+        self.parent.end_drag()
         self.dragging = None
 
     def MouseMotion(self, pos, rel, handled):
@@ -1078,7 +1124,7 @@ class ScrollTextBox(TextBox):
             # self.UpdatePosition()
 
 
-class TextBoxButton(TextBox):
+class TextBoxButton(TextBox, HoverableElement):
     def __init__(
         self,
         parent,
@@ -1159,14 +1205,8 @@ class TextBoxButton(TextBox):
                 self.hover_quads[i].Disable()
 
     def SetPos(self, pos):
-        # FIXME: This is shit. I can't be removing and adding every frame
-        reregister = self.enabled
-        if reregister:
-            self.root.RemoveUIElement(self)
         super(TextBoxButton, self).SetPos(pos)
         self.SetVertices()
-        if reregister:
-            self.root.RegisterUIElement(self)
 
     def ReallocateResources(self):
         super(TextBoxButton, self).ReallocateResources()
@@ -1217,7 +1257,6 @@ class TextBoxButton(TextBox):
 
     def Enable(self):
         if not self.enabled:
-            self.root.RegisterUIElement(self)
             if self.hovered:
                 self.Hover()
             elif self.selected:
@@ -1228,7 +1267,6 @@ class TextBoxButton(TextBox):
 
     def Disable(self):
         if self.enabled:
-            self.root.RemoveUIElement(self)
             for i in range(4):
                 self.hover_quads[i].Disable()
         super(TextBoxButton, self).Disable()
