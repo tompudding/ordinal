@@ -54,7 +54,7 @@ class Viewpos(object):
         self.follow_locked = False
 
     def HasTarget(self):
-        return self.target != None
+        return self.target is not None
 
     def Get(self):
         return self.pos
@@ -364,7 +364,7 @@ class GameView(ui.RootElement):
                 #the target is not in the slots. assume that it's going to empty
                 goingtoempty.append(num)
                 continue
-            if code.slots[slot] == None:
+            if code.slots[slot] is None:
                 goingtoempty.append(num)
             else:
                 goingtofull.append(num)
@@ -397,13 +397,13 @@ class GameView(ui.RootElement):
         if self.game_over:
             return
 
-        if self.wall == None:
+        if self.wall is None:
             self.wall = pygame.time.get_ticks()
             
         elapsed = (t - self.wall)
         if self.speed != 0 and not self.paused:
             self.t += elapsed*self.speed
-            for cycle in xrange(self.last_cycle,int(self.t)):
+            for cycle in range(self.last_cycle,int(self.t)):
                 self.NewCycle(cycle+1)
                 self.last_cycle = int(self.t)
             if self.t > self.last_timer_update + self.timer_update_duration:

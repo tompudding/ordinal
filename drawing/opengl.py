@@ -36,6 +36,9 @@ def Translate(x,y,z):
 def Scale(x,y,z):
     glScalef(x,y,z)
 
+def Rotate(angle):
+    glRotatef(angle,0,0,1)
+
 def NewFrame():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()

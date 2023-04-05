@@ -18,13 +18,13 @@ class ShapeBuffer(object):
         self.colour_data = numpy.ones((size*self.num_points,4),numpy.float32) #RGBA default is white opaque
         self.indices      = numpy.zeros(size*self.num_points,numpy.uint32)  #de
         self.size = size
-        for i in xrange(size*self.num_points):
+        for i in range(size*self.num_points):
             self.indices[i] = i
         self.current_size = 0
         self.max_size     = size*self.num_points
         self.vacant = set()
 
-    def next(self):
+    def __next__(self):
         """
         Please can we have another quad? If some quads have been deleted and left a hole then we give
         those out first, otherwise we add one to the end.
@@ -34,7 +34,7 @@ class ShapeBuffer(object):
         if len(self.vacant) > 0:
             #for a vacant one we blatted the indices, so we should reset those...
             out = self.vacant.pop()
-            for i in xrange(self.num_points):
+            for i in range(self.num_points):
                 self.indices[out+i] = out+i
             return out
             
@@ -54,7 +54,7 @@ class ShapeBuffer(object):
         much overhead
         """
         self.current_size = n
-        for i in xrange(self.size*self.num_points):
+        for i in range(self.size*self.num_points):
             self.indices[i] = i
         self.vacant = []
 
@@ -66,9 +66,9 @@ class ShapeBuffer(object):
         hoping it won't ever be an issue
         """
         self.vacant.add(index)
-        for i in xrange(self.num_points):
+        for i in range(self.num_points):
             self.indices[index+i] = 0
-            for j in xrange(3):
+            for j in range(3):
                 self.vertex_data[index+i][j] = 0
 
 class QuadBuffer(ShapeBuffer):
@@ -104,17 +104,17 @@ class Shape(object):
     """
 
     def __init__(self,source,vertex = None,tc = None,colour_info = None,index = None):
-        if index == None:
-            self.index = source.next()
+        if index is None:
+            self.index = next(source)
         else:
             self.index = index
         self.source = source
         self.vertex = ShapeVertex(self.index,source.vertex_data)
         self.tc     = ShapeVertex(self.index,source.tc_data)
         self.colour = ShapeVertex(self.index,source.colour_data)
-        if vertex != None:
+        if vertex is not None:
             self.vertex[0:self.num_points] = vertex
-        if tc != None:
+        if tc is not None:
             self.tc[0:self.num_points] = tc
         self.old_vertices = None
         self.deleted = False
@@ -136,9 +136,9 @@ class Shape(object):
         """
         if self.deleted:
             return
-        if self.old_vertices == None:
+        if self.old_vertices is None:
             self.old_vertices = numpy.copy(self.vertex[0:self.num_points])
-            for i in xrange(self.num_points):
+            for i in range(self.num_points):
                 self.vertex[i] = (0,0,0)
 
     def Enable(self):
@@ -147,8 +147,8 @@ class Shape(object):
         """
         if self.deleted:
             return
-        if self.old_vertices != None:
-            for i in xrange(self.num_points):
+        if self.old_vertices is not None:
+            for i in range(self.num_points):
                 self.vertex[i] = self.old_vertices[i]
             self.old_vertices = None
 
@@ -156,9 +156,9 @@ class Shape(object):
         if self.deleted:
             return
         self.setvertices(self.vertex,bl,tr,z)
-        if self.old_vertices != None:
+        if self.old_vertices is not None:
             self.old_vertices = numpy.copy(self.vertex[0:self.num_points])
-            for i in xrange(self.num_points):
+            for i in range(self.num_points):
                 self.vertex[i] = (0,0,0)
     
     def SetColour(self,colour):
@@ -170,7 +170,7 @@ class Shape(object):
         if self.deleted:
             return
         for current,target in zip(self.colour,colours):
-            for i in xrange(self.num_points):
+            for i in range(self.num_points):
                 current[i] = target[i]
 
     def SetTextureCoordinates(self,tc):
@@ -187,23 +187,23 @@ def setverticesline(self,vertex,start,end,z):
     vertex[1] = (end.x,end.y,z)
 
 def setcolourquad(self,colour,value):
-    for i in xrange(4):
-        for j in xrange(4):
+    for i in range(4):
+        for j in range(4):
             colour[i][j] = value[j]
 
 def setcoloursquad(self,colour,values):
-    for i in xrange(4):
-        for j in xrange(4):
+    for i in range(4):
+        for j in range(4):
             colour[i][j] = values[i][j]
 
 def setcolourline(self,colour,value):
-    for i in xrange(2):
-        for j in xrange(4):
+    for i in range(2):
+        for j in range(4):
             colour[i][j] = value[j]
 
 def setcoloursline(self,colour,values):
-    for i in xrange(2):
-        for j in xrange(4):
+    for i in range(2):
+        for j in range(4):
             colour[i][j] = values[i][j]
 
 class Quad(Shape):
@@ -220,7 +220,7 @@ class Line(Shape):
 class QuadBorder(object):
     """Class that draws the outline of a rectangle"""
     def __init__(self,source,line_width,colour = None):
-        self.quads = [Quad(source) for i in xrange(4)]
+        self.quads = [Quad(source) for i in range(4)]
         self.line_width = line_width
         if colour:
             self.SetColour(colour)
