@@ -218,7 +218,7 @@ class TextManager(object):
     def __init__(self):
         # fontname,fontdataname = (os.path.join('fonts',name) for name in ('pixelmix.png','pixelmix.txt'))
         # self.atlas = TextureAtlas(fontname,fontdataname)
-        self.atlas = PetsciiAtlas("petscii.png")
+        self.atlas = PetsciiAtlas(globals.pyinst.path("petscii.png"))
         self.font_height = max(subimage.size.y for subimage in list(self.atlas.subimages.values()))
         self.quads = quads.QuadBuffer(
             131072

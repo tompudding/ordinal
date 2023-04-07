@@ -34,7 +34,7 @@ class UIElementList:
     def __repr__(self):
         out = ["UIElementList:"]
         for full_pos, item_list in self.items.items():
-            out.append(f"{full_pos=}")
+            out.append(f"full_pos={full_pos}")
             for item in item_list:
                 out.append(
                     "%s:%s - %s(%s)"
